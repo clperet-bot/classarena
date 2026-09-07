@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="ClassArena">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root{
     --bg:#12142B;
@@ -482,6 +483,21 @@
     <div class="stack" id="leaderboardList"></div>
   </section>
 
+  <!-- TEACHER AUTH -->
+  <section class="screen" id="teacherAuthScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="goClassScreen()">←</button>
+      <div class="stat-pill">Espace enseignant</div>
+      <div style="width:38px"></div>
+    </div>
+    <p class="page-title">Mot de passe</p>
+    <div class="field" style="margin-top:10px;">
+      <input type="password" id="teacherPasswordInput" placeholder="Mot de passe" style="text-align:center;" onkeydown="if(event.key==='Enter') checkTeacherPassword();">
+    </div>
+    <p id="teacherAuthError" style="color:var(--coral); font-size:13px; text-align:center; display:none;">Mot de passe incorrect.</p>
+    <button class="btn primary" style="width:100%;" onclick="checkTeacherPassword()">Entrer</button>
+  </section>
+
   <!-- TEACHER HOME -->
   <section class="screen" id="teacherScreen">
     <div class="topbar">
@@ -503,6 +519,8 @@
         <input type="text" id="newStudentInput" placeholder="Nom de l'élève">
         <button onclick="addStudent()">Ajouter</button>
       </div>
+      <input type="file" id="rosterExcelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importRosterExcel(event)">
+      <button class="btn ghost" style="width:100%; margin-bottom:16px;" onclick="document.getElementById('rosterExcelInput').click()">📄 Importer depuis un fichier Excel</button>
       <p class="section-title">Thèmes</p>
       <div id="teacherThemeList"></div>
       <button class="btn primary" style="margin-top:6px;" onclick="openThemeEdit()">+ Nouveau thème</button>
@@ -1265,7 +1283,33 @@ async function showLeaderboard(mode){
 /* =========================================================
    TEACHER SPACE
    ========================================================= */
-function openTeacher(){ renderTeacherScreen(); showScreen('teacherScreen'); }
+/* Mot de passe par défaut : GDB2026 — dis-moi si tu veux le changer */
+const TEACHER_PASSWORD_HASH = "297bb3f42c61a42aec82d945b25c1ef262d44184fe1e9aa6e2ebbbb7edcb47ff";
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function openTeacher(){
+  if(sessionStorage.getItem('classarena_teacher_ok') === '1'){
+    renderTeacherScreen();
+    showScreen('teacherScreen');
+  } else {
+    document.getElementById('teacherPasswordInput').value = '';
+    document.getElementById('teacherAuthError').style.display = 'none';
+    showScreen('teacherAuthScreen');
+  }
+}
+async function checkTeacherPassword(){
+  const val = document.getElementById('teacherPasswordInput').value;
+  const hash = await sha256Hex(val);
+  if(hash === TEACHER_PASSWORD_HASH){
+    sessionStorage.setItem('classarena_teacher_ok', '1');
+    renderTeacherScreen();
+    showScreen('teacherScreen');
+  } else {
+    document.getElementById('teacherAuthError').style.display = 'block';
+  }
+}
 let rosterEditClass = null;
 
 function renderTeacherScreen(){
@@ -1350,6 +1394,37 @@ function removeStudent(i){
   if(!rosterEditClass) return;
   CONFIG.rosters[rosterEditClass].splice(i,1);
   saveConfig(); renderTeacherScreen();
+}
+function importRosterExcel(event){
+  const file = event.target.files[0];
+  if(!file || !rosterEditClass) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1});
+      const names = rows
+        .map(r => (r && r[0] != null) ? String(r[0]).trim() : '')
+        .filter(n => n && !/^(nom|élève|eleve|prénom|prenom|nom prénom|nom et prénom)$/i.test(n));
+      if(!CONFIG.rosters[rosterEditClass]) CONFIG.rosters[rosterEditClass] = [];
+      let added = 0;
+      names.forEach(n=>{
+        if(!CONFIG.rosters[rosterEditClass].includes(n)){
+          CONFIG.rosters[rosterEditClass].push(n);
+          added++;
+        }
+      });
+      saveConfig();
+      renderTeacherScreen();
+      alert(added + ' élève(s) ajouté(s) pour ' + rosterEditClass + '.');
+    }catch(err){
+      alert("Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un .xlsx, .xls ou .csv avec un nom par ligne.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
 }
 
 /* ---- theme edit working state ---- */
