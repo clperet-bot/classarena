@@ -280,9 +280,10 @@
   .missed-row b{color:var(--lime);}
   .result-actions{display:flex; gap:12px; width:100%; flex:none;}
   .btn{
-    flex:1; padding:15px; border-radius:14px; border:none; font-family:inherit;
+    flex:none; width:auto; padding:15px; border-radius:14px; border:none; font-family:inherit;
     font-weight:700; font-size:15px; cursor:pointer;
   }
+  .result-actions .btn, .settings-actions .btn{flex:1;}
   .btn.primary{background:var(--lime); color:#0f2400;}
   .btn.ghost{background:var(--bg2); color:var(--text);}
 
