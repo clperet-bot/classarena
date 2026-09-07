@@ -332,6 +332,21 @@
     border:2px solid var(--bg3); border-radius:12px; padding:12px 14px; margin-bottom:8px; flex:none;
   }
   .class-list-row span{font-weight:600; font-size:14px;}
+
+  .class-accordion{background:var(--bg2); border:2px solid var(--bg3); border-radius:14px; margin-bottom:10px; flex:none; overflow:hidden;}
+  .class-accordion-header{
+    display:flex; justify-content:space-between; align-items:center; padding:14px 16px;
+    cursor:pointer; gap:10px;
+  }
+  .class-accordion-name{font-weight:700; font-size:15px; flex:1; min-width:0; overflow-wrap:break-word;}
+  .class-accordion-count{color:var(--dim); font-size:12px; font-weight:600; margin-left:6px;}
+  .class-accordion-chevron{color:var(--dim); font-size:12px; flex:none;}
+  .class-accordion-body{padding:0 16px 16px; border-top:2px solid var(--bg3);}
+  .student-row{
+    display:flex; justify-content:space-between; align-items:center; background:var(--bg3);
+    border-radius:10px; padding:10px 12px; margin-bottom:6px; margin-top:10px; flex:none;
+  }
+  .student-row span{font-size:13px; font-weight:600;}
   .segment{display:flex; width:100%; background:var(--bg2); border-radius:12px; padding:4px; margin-bottom:12px;}
   .segment button{flex:1; background:none; border:none; color:var(--dim); font-family:inherit; font-weight:700; font-size:12px; padding:10px 4px; border-radius:9px; cursor:pointer;}
   .segment button.active{background:var(--bg3); color:var(--text);}
@@ -518,24 +533,13 @@
       <div style="width:38px"></div>
     </div>
     <div class="stack">
-      <p class="section-title">Classes</p>
-      <div id="classListWrap"></div>
+      <p class="section-title">Classes et élèves</p>
       <div class="add-row">
         <input type="text" id="newClassInput" placeholder="Nouvelle classe (ex: 2nde MES)">
-        <button onclick="addClass()">Ajouter</button>
+        <button onclick="addClass()">Ajouter une classe</button>
       </div>
-      <p class="section-title">Élèves</p>
-      <div class="field">
-        <label>Classe à gérer</label>
-        <select id="rosterClassSelect" onchange="onRosterClassChange()"></select>
-      </div>
-      <div id="rosterListWrap"></div>
-      <div class="add-row">
-        <input type="text" id="newStudentInput" placeholder="Nom de l'élève">
-        <button onclick="addStudent()">Ajouter</button>
-      </div>
+      <div id="classAccordionWrap"></div>
       <input type="file" id="rosterExcelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="importRosterExcel(event)">
-      <button class="btn ghost" style="width:100%; margin-bottom:16px;" onclick="document.getElementById('rosterExcelInput').click()">📄 Importer depuis un fichier Excel</button>
       <p class="section-title">Thèmes</p>
       <div id="teacherThemeList"></div>
       <button class="btn primary" style="margin-top:6px;" onclick="openThemeEdit()">+ Nouveau thème</button>
@@ -1325,45 +1329,60 @@ async function checkTeacherPassword(){
     document.getElementById('teacherAuthError').style.display = 'block';
   }
 }
-let rosterEditClass = null;
+let expandedClass = null;
 
 function renderTeacherScreen(){
-  const cWrap = document.getElementById('classListWrap');
-  cWrap.innerHTML = '';
+  const wrap = document.getElementById('classAccordionWrap');
+  wrap.innerHTML = '';
   if(CONFIG.classes.length === 0){
-    cWrap.innerHTML = '<p style="color:var(--dim);font-size:13px;">Aucune classe pour le moment.</p>';
+    wrap.innerHTML = '<p style="color:var(--dim);font-size:13px;">Aucune classe pour le moment.</p>';
   }
   CONFIG.classes.forEach((c,i)=>{
-    const row = document.createElement('div');
-    row.className = 'class-list-row';
-    row.innerHTML = `<span>${escapeHtml(c)}</span><button class="small-btn" onclick="removeClass(${i})">Supprimer</button>`;
-    cWrap.appendChild(row);
-  });
+    const roster = CONFIG.rosters[c] || [];
+    const isOpen = (expandedClass === c);
+    const acc = document.createElement('div');
+    acc.className = 'class-accordion';
 
-  if(!rosterEditClass || !CONFIG.classes.includes(rosterEditClass)) rosterEditClass = CONFIG.classes[0] || null;
-  const select = document.getElementById('rosterClassSelect');
-  select.innerHTML = '';
-  CONFIG.classes.forEach(c=>{
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    if(c === rosterEditClass) opt.selected = true;
-    select.appendChild(opt);
-  });
+    const header = document.createElement('div');
+    header.className = 'class-accordion-header';
+    header.innerHTML = `
+      <span class="class-accordion-name">${escapeHtml(c)}<span class="class-accordion-count"> · ${roster.length} élève${roster.length>1?'s':''}</span></span>
+      <button class="small-btn" data-role="delete-class">Supprimer</button>
+      <span class="class-accordion-chevron">${isOpen ? '▲' : '▼'}</span>`;
+    header.querySelector('[data-role="delete-class"]').onclick = (e)=>{ e.stopPropagation(); removeClass(i); };
+    header.addEventListener('click', ()=>{ expandedClass = isOpen ? null : c; renderTeacherScreen(); });
+    acc.appendChild(header);
 
-  const rWrap = document.getElementById('rosterListWrap');
-  rWrap.innerHTML = '';
-  if(rosterEditClass){
-    const roster = CONFIG.rosters[rosterEditClass] || [];
-    if(roster.length === 0){
-      rWrap.innerHTML = '<p style="color:var(--dim);font-size:13px;">Aucun élève pour '+escapeHtml(rosterEditClass)+'.</p>';
+    if(isOpen){
+      const body = document.createElement('div');
+      body.className = 'class-accordion-body';
+      if(roster.length === 0){
+        const p = document.createElement('p');
+        p.style.cssText = 'color:var(--dim);font-size:13px;margin:10px 0 0;';
+        p.textContent = 'Aucun élève pour le moment.';
+        body.appendChild(p);
+      }
+      roster.forEach((name,si)=>{
+        const row = document.createElement('div');
+        row.className = 'student-row';
+        row.innerHTML = `<span>${escapeHtml(name)}</span><button class="small-btn" onclick="removeStudent('${c.replace(/'/g,"\\'")}', ${si})">✕</button>`;
+        body.appendChild(row);
+      });
+      const addRow = document.createElement('div');
+      addRow.className = 'add-row';
+      addRow.style.marginTop = '10px';
+      addRow.innerHTML = `<input type="text" id="newStudentInput" placeholder="Nom de l'élève"><button onclick="addStudent('${c.replace(/'/g,"\\'")}')">Ajouter</button>`;
+      body.appendChild(addRow);
+      const importBtn = document.createElement('button');
+      importBtn.className = 'btn ghost';
+      importBtn.style.cssText = 'width:100%; margin-top:8px;';
+      importBtn.textContent = '📄 Importer depuis un fichier Excel';
+      importBtn.onclick = ()=>{ document.getElementById('rosterExcelInput').click(); };
+      body.appendChild(importBtn);
+      acc.appendChild(body);
     }
-    roster.forEach((name,i)=>{
-      const row = document.createElement('div');
-      row.className = 'class-list-row';
-      row.innerHTML = `<span>${escapeHtml(name)}</span><button class="small-btn" onclick="removeStudent(${i})">Supprimer</button>`;
-      rWrap.appendChild(row);
-    });
-  }
+    wrap.appendChild(acc);
+  });
 
   const tWrap = document.getElementById('teacherThemeList');
   tWrap.innerHTML = '';
@@ -1382,10 +1401,6 @@ function renderTeacherScreen(){
     tWrap.appendChild(row);
   });
 }
-function onRosterClassChange(){
-  rosterEditClass = document.getElementById('rosterClassSelect').value;
-  renderTeacherScreen();
-}
 function addClass(){
   const input = document.getElementById('newClassInput');
   const val = input.value.trim();
@@ -1400,26 +1415,26 @@ function removeClass(i){
   CONFIG.classes.splice(i,1);
   CONFIG.themes.forEach(t=>{ t.classes = t.classes.filter(c=>c!==name); });
   delete CONFIG.rosters[name];
+  if(expandedClass === name) expandedClass = null;
   saveConfig(); renderTeacherScreen();
 }
-function addStudent(){
-  if(!rosterEditClass) return;
+function addStudent(className){
   const input = document.getElementById('newStudentInput');
   const val = input.value.trim();
   if(!val) return;
-  if(!CONFIG.rosters[rosterEditClass]) CONFIG.rosters[rosterEditClass] = [];
-  if(CONFIG.rosters[rosterEditClass].includes(val)){ input.value=''; return; }
-  CONFIG.rosters[rosterEditClass].push(val);
-  saveConfig(); input.value=''; renderTeacherScreen();
+  if(!CONFIG.rosters[className]) CONFIG.rosters[className] = [];
+  if(CONFIG.rosters[className].includes(val)){ input.value=''; return; }
+  CONFIG.rosters[className].push(val);
+  saveConfig(); renderTeacherScreen();
 }
-function removeStudent(i){
-  if(!rosterEditClass) return;
-  CONFIG.rosters[rosterEditClass].splice(i,1);
+function removeStudent(className, i){
+  CONFIG.rosters[className].splice(i,1);
   saveConfig(); renderTeacherScreen();
 }
 function importRosterExcel(event){
   const file = event.target.files[0];
-  if(!file || !rosterEditClass) return;
+  if(!file || !expandedClass) return;
+  const targetClass = expandedClass;
   const reader = new FileReader();
   reader.onload = (e)=>{
     try{
@@ -1430,17 +1445,17 @@ function importRosterExcel(event){
       const names = rows
         .map(r => (r && r[0] != null) ? String(r[0]).trim() : '')
         .filter(n => n && !/^(nom|élève|eleve|prénom|prenom|nom prénom|nom et prénom)$/i.test(n));
-      if(!CONFIG.rosters[rosterEditClass]) CONFIG.rosters[rosterEditClass] = [];
+      if(!CONFIG.rosters[targetClass]) CONFIG.rosters[targetClass] = [];
       let added = 0;
       names.forEach(n=>{
-        if(!CONFIG.rosters[rosterEditClass].includes(n)){
-          CONFIG.rosters[rosterEditClass].push(n);
+        if(!CONFIG.rosters[targetClass].includes(n)){
+          CONFIG.rosters[targetClass].push(n);
           added++;
         }
       });
       saveConfig();
       renderTeacherScreen();
-      alert(added + ' élève(s) ajouté(s) pour ' + rosterEditClass + '.');
+      alert(added + ' élève(s) ajouté(s) pour ' + targetClass + '.');
     }catch(err){
       alert("Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un .xlsx, .xls ou .csv avec un nom par ligne.");
     }
