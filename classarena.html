@@ -62,7 +62,8 @@
   .page-sub{color:var(--dim); font-size:13px; text-align:center; margin-bottom:16px;}
 
   /* ---------- LISTS / STACKS ---------- */
-  .stack{display:flex; flex-direction:column; width:100%; flex:1; overflow-y:auto; padding-bottom:6px;}
+  .stack{display:flex; flex-direction:column; width:100%; flex:1; overflow-y:auto; overflow-x:hidden; padding-bottom:6px; min-width:0;}
+  .stack *{min-width:0;}
   .class-btn{
     width:100%; background:var(--bg2); border:2px solid var(--bg3); border-radius:16px;
     padding:18px; color:var(--text); font-family:inherit; font-size:16px; font-weight:700;
@@ -311,15 +312,25 @@
     display:flex; justify-content:space-between; align-items:center; background:var(--bg2);
     border-radius:14px; padding:14px 16px; margin-bottom:10px; flex:none; gap:10px;
   }
+  .teacher-row > div{min-width:0; overflow-wrap:break-word;}
   .row-title{font-weight:700; font-size:14px;}
-  .row-sub{color:var(--dim); font-size:12px; margin-top:2px;}
+  .row-sub{color:var(--dim); font-size:12px; margin-top:2px; overflow-wrap:break-word;}
   .small-btn{background:var(--bg3); border:none; color:var(--text); border-radius:8px; padding:9px 12px; font-size:12px; cursor:pointer; flex:none;}
   .field{width:100%; margin-bottom:16px; flex:none;}
   .field label{display:block; font-size:12px; color:var(--dim); margin-bottom:6px; font-weight:600;}
-  .field input[type=text]{
+  .field input[type=text], .field input[type=password]{
     width:100%; background:var(--bg2); border:2px solid var(--bg3); border-radius:12px;
     color:var(--text); font-family:inherit; font-size:15px; padding:12px 14px;
   }
+  .field select{
+    width:100%; background:var(--bg2); border:2px solid var(--bg3); border-radius:12px;
+    color:var(--text); font-family:inherit; font-size:15px; padding:12px 14px;
+  }
+  .class-list-row{
+    display:flex; justify-content:space-between; align-items:center; background:var(--bg2);
+    border:2px solid var(--bg3); border-radius:12px; padding:12px 14px; margin-bottom:8px; flex:none;
+  }
+  .class-list-row span{font-weight:600; font-size:14px;}
   .segment{display:flex; width:100%; background:var(--bg2); border-radius:12px; padding:4px; margin-bottom:12px;}
   .segment button{flex:1; background:none; border:none; color:var(--dim); font-family:inherit; font-weight:700; font-size:12px; padding:10px 4px; border-radius:9px; cursor:pointer;}
   .segment button.active{background:var(--bg3); color:var(--text);}
@@ -507,14 +518,17 @@
     </div>
     <div class="stack">
       <p class="section-title">Classes</p>
-      <div class="chip-row" id="classChipsWrap"></div>
+      <div id="classListWrap"></div>
       <div class="add-row">
         <input type="text" id="newClassInput" placeholder="Nouvelle classe (ex: 2nde MES)">
         <button onclick="addClass()">Ajouter</button>
       </div>
       <p class="section-title">Élèves</p>
-      <div class="chip-row" id="rosterClassChipsWrap"></div>
-      <div class="chip-row" id="rosterChipsWrap"></div>
+      <div class="field">
+        <label>Classe à gérer</label>
+        <select id="rosterClassSelect" onchange="onRosterClassChange()"></select>
+      </div>
+      <div id="rosterListWrap"></div>
       <div class="add-row">
         <input type="text" id="newStudentInput" placeholder="Nom de l'élève">
         <button onclick="addStudent()">Ajouter</button>
@@ -1313,26 +1327,29 @@ async function checkTeacherPassword(){
 let rosterEditClass = null;
 
 function renderTeacherScreen(){
-  const cWrap = document.getElementById('classChipsWrap');
+  const cWrap = document.getElementById('classListWrap');
   cWrap.innerHTML = '';
+  if(CONFIG.classes.length === 0){
+    cWrap.innerHTML = '<p style="color:var(--dim);font-size:13px;">Aucune classe pour le moment.</p>';
+  }
   CONFIG.classes.forEach((c,i)=>{
-    const chip = document.createElement('span');
-    chip.className = 'class-chip';
-    chip.innerHTML = `${escapeHtml(c)} <button onclick="removeClass(${i})">✕</button>`;
-    cWrap.appendChild(chip);
+    const row = document.createElement('div');
+    row.className = 'class-list-row';
+    row.innerHTML = `<span>${escapeHtml(c)}</span><button class="small-btn" onclick="removeClass(${i})">Supprimer</button>`;
+    cWrap.appendChild(row);
   });
 
   if(!rosterEditClass || !CONFIG.classes.includes(rosterEditClass)) rosterEditClass = CONFIG.classes[0] || null;
-  const rcWrap = document.getElementById('rosterClassChipsWrap');
-  rcWrap.innerHTML = '';
+  const select = document.getElementById('rosterClassSelect');
+  select.innerHTML = '';
   CONFIG.classes.forEach(c=>{
-    const chip = document.createElement('span');
-    chip.className = 'chip' + (c === rosterEditClass ? ' active' : '');
-    chip.textContent = c;
-    chip.onclick = ()=>{ rosterEditClass = c; renderTeacherScreen(); };
-    rcWrap.appendChild(chip);
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    if(c === rosterEditClass) opt.selected = true;
+    select.appendChild(opt);
   });
-  const rWrap = document.getElementById('rosterChipsWrap');
+
+  const rWrap = document.getElementById('rosterListWrap');
   rWrap.innerHTML = '';
   if(rosterEditClass){
     const roster = CONFIG.rosters[rosterEditClass] || [];
@@ -1340,10 +1357,10 @@ function renderTeacherScreen(){
       rWrap.innerHTML = '<p style="color:var(--dim);font-size:13px;">Aucun élève pour '+escapeHtml(rosterEditClass)+'.</p>';
     }
     roster.forEach((name,i)=>{
-      const chip = document.createElement('span');
-      chip.className = 'class-chip';
-      chip.innerHTML = `${escapeHtml(name)} <button onclick="removeStudent(${i})">✕</button>`;
-      rWrap.appendChild(chip);
+      const row = document.createElement('div');
+      row.className = 'class-list-row';
+      row.innerHTML = `<span>${escapeHtml(name)}</span><button class="small-btn" onclick="removeStudent(${i})">Supprimer</button>`;
+      rWrap.appendChild(row);
     });
   }
 
@@ -1363,6 +1380,10 @@ function renderTeacherScreen(){
       <button class="small-btn" onclick="openThemeEdit(${i})">Modifier</button>`;
     tWrap.appendChild(row);
   });
+}
+function onRosterClassChange(){
+  rosterEditClass = document.getElementById('rosterClassSelect').value;
+  renderTeacherScreen();
 }
 function addClass(){
   const input = document.getElementById('newClassInput');
