@@ -424,6 +424,7 @@
       <div class="stat-pill">Manche <b id="swipeRound">1/15</b></div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="swipeProgress" style="width:0%"></div></div>
+    <p class="target-sub" id="swipePromptText">La réponse affichée est-elle correcte ?</p>
     <div class="card-zone" id="cardZone"></div>
     <div class="swipe-buttons">
       <button class="swipe-btn no" onclick="swipeDecision(-1)">✕</button>
@@ -449,6 +450,37 @@
     </div>
   </section>
 
+  <!-- DUEL SETUP -->
+  <section class="screen" id="duelSetupScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backFromGame()">←</button>
+      <div class="stat-pill">Duel</div>
+      <div style="width:38px"></div>
+    </div>
+    <p class="page-title">Défier un adversaire</p>
+    <p class="page-sub">Vous devez tous les deux être sur le même thème.</p>
+    <button class="btn primary" style="width:100%; margin-bottom:14px;" onclick="createDuelRoom()">Créer un duel</button>
+    <div class="field">
+      <label>Ou rejoindre avec un code</label>
+      <input type="text" id="duelJoinCodeInput" placeholder="Code à 4 caractères" style="text-align:center; text-transform:uppercase;" maxlength="4">
+    </div>
+    <button class="btn ghost" style="width:100%;" onclick="joinDuelRoom()">Rejoindre</button>
+    <p id="duelSetupError" style="color:var(--coral); font-size:13px; text-align:center; margin-top:12px; display:none;"></p>
+  </section>
+
+  <!-- DUEL WAIT -->
+  <section class="screen" id="duelWaitScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="cancelDuelWait()">←</button>
+      <div class="stat-pill">Duel</div>
+      <div style="width:38px"></div>
+    </div>
+    <p class="page-title">En attente d'un adversaire</p>
+    <p class="page-sub">Donne ce code à ton adversaire :</p>
+    <div class="result-score" id="duelWaitCode" style="font-size:48px;">----</div>
+    <p class="page-sub">La partie démarre dès qu'il/elle a rejoint.</p>
+  </section>
+
   <!-- DUEL -->
   <section class="screen" id="duelScreen">
     <div class="topbar">
@@ -457,16 +489,17 @@
       <div style="width:38px"></div>
     </div>
     <div class="hp-block">
-      <div class="hp-row"><span>Toi</span><span class="hp-num" id="playerHpNum">100</span></div>
+      <div class="hp-row"><span id="duelPlayerLabel">Toi</span><span class="hp-num" id="playerHpNum">100</span></div>
       <div class="hp-track"><div class="hp-fill player" id="playerHpFill" style="width:100%"></div></div>
     </div>
     <div class="hp-block">
-      <div class="hp-row"><span>Adversaire</span><span class="hp-num" id="monsterHpNum">100</span></div>
+      <div class="hp-row"><span id="duelOpponentLabel">Adversaire</span><span class="hp-num" id="monsterHpNum">100</span></div>
       <div class="hp-track"><div class="hp-fill monster" id="monsterHpFill" style="width:100%"></div></div>
     </div>
     <div class="duel-arena">
-      <div class="monster-face" id="monsterFace">👾</div>
+      <div class="monster-face" id="monsterFace">⚔</div>
       <div id="dmgLayer"></div>
+      <p id="duelWaitingNote" style="color:var(--dim); font-size:13px; display:none;">En attente de l'autre joueur…</p>
     </div>
     <div class="timer-track"><div class="timer-fill" id="duelTimerFill" style="background:var(--amber);"></div></div>
     <div class="target-word" id="duelBase">go</div>
@@ -481,6 +514,7 @@
       <div class="stat-pill">Coups <b id="pairsMoves">0</b></div>
       <div class="stat-pill">Temps <b id="pairsTimer">0:00</b></div>
     </div>
+    <p class="target-sub" style="margin-top:2px;">Retourne les cartes pour associer chaque terme à sa bonne réponse.</p>
     <div class="memory-grid" id="memoryGrid"></div>
   </section>
 
@@ -625,6 +659,87 @@ const DEFAULT_MYSTERY_VOCAB = [
 ["timeline","chronologie",""],["to interrogate","interroger",""],["statement","déclaration",""]
 ];
 
+const DEFAULT_ART_TO_AD_VOCAB = [
+["logo","logo",""],["brand name","nom de marque",""],["slogan","slogan",""],
+["caption","légende",""],["picture","image",""],["advertisement","publicité",""],
+["painting","tableau",""],["background","arrière-plan",""],["torn paper","papier déchiré",""],
+["sunglasses","lunettes de soleil",""],["to compare","comparer",""],["to describe","décrire",""],
+["but","mais",""],["however","cependant",""],["while","alors que",""],["whereas","tandis que",""]
+];
+
+const DEFAULT_VOCAB_RICHE = [
+["bien","excellent",""],["faire","réaliser",""],["dire","affirmer",""],["chose","élément",""],
+["avoir peur","craindre",""],["content","ravi",""],["grand","immense",""],["petit","minuscule",""],
+["beau","magnifique",""],["mauvais","médiocre",""],["vite","rapidement",""],["très","extrêmement",""],
+["aller","se rendre",""],["voir","apercevoir",""],["penser","estimer",""],["gens","individus",""],
+["beaucoup","considérablement",""],["triste","mélancolique",""],["content de","satisfait de",""],
+["parler","s'exprimer",""]
+];
+
+const DEFAULT_CONJUGAISON = [
+["être - il - présent","est",""],["avoir - je - futur","aurai",""],["aller - nous - imparfait","allions",""],
+["faire - vous - passé composé","avez fait",""],["dire - tu - présent","dis",""],
+["venir - ils - futur","viendront",""],["pouvoir - je - présent","peux",""],["vouloir - elle - présent","veut",""],
+["prendre - nous - passé composé","avons pris",""],["voir - vous - imparfait","voyiez",""],
+["savoir - je - futur","saurai",""],["devoir - tu - présent","dois",""],["mettre - ils - passé composé","ont mis",""],
+["croire - elle - présent","croit",""],["écrire - nous - présent","écrivons",""],["boire - je - passé composé","ai bu",""],
+["partir - vous - présent","partez",""],["finir - ils - futur","finiront",""],["être - nous - imparfait","étions",""],
+["avoir - elle - passé composé","a eu",""]
+];
+
+const DEFAULT_ORTHOGRAPHE = [
+["Elle ___ une voiture rouge. (a/à)","a",""],["Je vais ___ Paris. (a/à)","à",""],
+["Il ___ fatigué aujourd'hui. (est/et)","est",""],["Paul ___ Marie sont amis. (est/et)","et",""],
+["___ chat dort. (Son/Sont)","Son",""],["Les enfants ___ dans le jardin. (son/sont)","sont",""],
+["___ que tu fais ? (Ce/Se)","Ce",""],["Il ___ lave les mains. (ce/se)","se",""],
+["___ est facile ! (C'est/S'est)","C'est",""],["Elle ___ blessée hier. (c'est/s'est)","s'est",""],
+["Je n'ai pas ___ de temps. (mais/mes)","mais",""],["Voici ___ affaires. (mais/mes)","mes",""],
+["Il a ___ d'amis. (peu/peux/peut)","peu",""],["Tu ___ venir si tu veux. (peu/peux/peut)","peux",""],
+["___ heure est-il ? (Quel/Quelle/Qu'elle)","Quelle",""],["Je crois ___ vienne. (quel/quelle/qu'elle)","qu'elle",""]
+];
+
+const ALL_CLASSES = ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"];
+
+const DEFAULT_CONDITIONALS = [
+["If it ___ tomorrow, we will cancel the trip. (rains/rained)","rains",""],
+["If I ___ you, I would say sorry. (am/were)","were",""],
+["If she had studied harder, she ___ have passed. (would/will)","would",""],
+["If you heat ice, it ___ . (melts/will melt)","melts",""],
+["If we had left earlier, we ___ have missed the train. (wouldn't/won't)","wouldn't",""],
+["If he ___ hard, he will succeed. (works/worked)","works",""],
+["If I had more time, I ___ travel more. (would/will)","would",""],
+["If you don't hurry, you ___ miss the bus. (will/would)","will",""],
+["If they ___ rich, they would buy a house. (are/were)","were",""],
+["If I win the lottery, I ___ buy a car. (will/would)","will",""],
+["If it had rained, the match ___ have been cancelled. (would/will)","would",""],
+["Water freezes if the temperature ___ below zero. (drops/dropped)","drops",""],
+["If she calls, I ___ answer. (will/would)","will",""],
+["If I were rich, I ___ travel the world. (will/would)","would",""],
+["If you had told me, I ___ have helped. (would/will)","would",""],
+["If he studies, he ___ pass the exam. (passes/will pass)","will pass",""]
+];
+
+const DEFAULT_MODALS = [
+["You ___ wear a seatbelt. It's the law. (must/should)","must",""],
+["You ___ see a doctor, it would be wise. (must/should)","should",""],
+["___ I open the window? (Can/Must)","Can",""],
+["___ I please leave early? (May/Must)","May",""],
+["It ___ rain later, I'm not sure. (might/must)","might",""],
+["She ___ speak three languages. (can/must)","can",""],
+["You ___ smoke here, it's forbidden. (mustn't/don't have to)","mustn't",""],
+["You ___ pay, it's free. (mustn't/don't have to)","don't have to",""],
+["He ___ finish his homework before dinner. (has to/might)","has to",""],
+["___ you help me, please? (Could/Must)","Could",""],
+["When I was young, I ___ run very fast. (could/must)","could",""],
+["You ___ be tired after that trip. (must/mustn't)","must",""],
+["We ___ leave now if we want to catch the bus. (should/may)","should",""],
+["___ I have your name, please? (May/Can)","May",""],
+["It ___ be difficult, I'm not sure. (might/must)","might",""],
+["You ___ eat vegetables, they're good for you. (should/must)","should",""],
+["I ___ swim when I was five. (could/should)","could",""],
+["You ___ arrive on time, it's important. (must/might)","must",""]
+];
+
 const DEFAULT_CONFIG = {
   classes: ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"],
   rosters: {},
@@ -650,6 +765,72 @@ const DEFAULT_CONFIG = {
       modes: ["swipe","shoot","duel","pairs"],
       lockedMode: "swipe",
       items: DEFAULT_MYSTERY_VOCAB
+    },
+    {
+      id: "from-art-to-ad",
+      title: "From Art to Ad — vocabulaire",
+      classes: ["2nde MES"],
+      prefix: "",
+      prompt: "Quelle est la traduction ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_ART_TO_AD_VOCAB
+    },
+    {
+      id: "vocab-riche",
+      title: "Mieux s'exprimer — vocabulaire riche",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quel est un synonyme plus riche ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_VOCAB_RICHE
+    },
+    {
+      id: "conjugaison",
+      title: "Conjugaison — temps verbaux",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quelle est la bonne forme conjuguée ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_CONJUGAISON
+    },
+    {
+      id: "orthographe",
+      title: "Orthographe — homophones",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quel est le bon mot ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_ORTHOGRAPHE
+    },
+    {
+      id: "modals",
+      title: "Modal verbs — les modaux",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quel est le bon modal ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_MODALS
+    },
+    {
+      id: "conditionals",
+      title: "If-clauses — phrases conditionnelles",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quelle est la bonne forme ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs"],
+      lockedMode: "swipe",
+      items: DEFAULT_CONDITIONALS
     }
   ]
 };
@@ -721,7 +902,7 @@ function goClassScreen(){ renderClassList(); showScreen('classScreen'); }
 function backToPlayerScreen(){ renderPlayerList(); showScreen('playerScreen'); }
 function backToThemeScreen(){ renderThemeList(); showScreen('themeScreen'); }
 function backFromGame(){
-  clearTimeout(shootTimerHandle); clearTimeout(duelTimerHandle); clearInterval(pairsTimerHandle);
+  clearTimeout(shootTimerHandle); clearTimeout(duelRoundTimerHandle); clearInterval(duelPollHandle); stopDuelHeartbeat(); clearInterval(pairsTimerHandle);
   stopShootMotion();
   if(!selectedTheme){ goClassScreen(); return; }
   if(selectedTheme.modeMode === 'choice'){ renderModeList(); showScreen('modeScreen'); }
@@ -731,6 +912,7 @@ function backFromGame(){
 /* ---------------- STUDENT FLOW STATE ---------------- */
 let selectedClass = null, selectedTheme = null, currentMode = null, currentPlayer = null;
 let ITEMS = [], PREFIX = '', PROMPT = '';
+let playerHp = 100, monsterHp = 100;
 
 function renderClassList(){
   const wrap = document.getElementById('classList');
@@ -821,7 +1003,7 @@ function launchGame(mode){
   PROMPT = selectedTheme.prompt || 'Trouve la bonne réponse.';
   if(mode === 'swipe') startSwipe();
   else if(mode === 'shoot') startShoot();
-  else if(mode === 'duel') startDuel();
+  else if(mode === 'duel') openDuelSetup();
   else if(mode === 'pairs') startPairs();
 }
 
@@ -848,6 +1030,7 @@ function startSwipe(){
   });
   swipeIndex = 0; swipeScore = 0; swipeMissed = [];
   document.getElementById('swipeScore').textContent = 0;
+  document.getElementById('swipePromptText').textContent = 'Est-ce correct ? ' + PROMPT;
   showScreen('swipeScreen');
   renderSwipeCard();
 }
@@ -1073,19 +1256,129 @@ function finishShoot(){
 }
 
 /* =========================================================
-   DUEL
+   DUEL — 2 joueurs en ligne (via Supabase)
    ========================================================= */
-let duelPool = [], duelPos = 0, duelRoundNum = 1, playerHp = 100, monsterHp = 100;
-let duelTimerHandle = null, duelMissed = [], duelStreak = 0;
-const DUEL_TIME = 6000, DUEL_MAX_ROUNDS = 30;
+const DUEL_ROUND_TIME = 10000, DUEL_DMG = 18, DUEL_ROUNDS_COUNT = 20;
+const DUEL_HEARTBEAT_MS = 5000, DUEL_ABANDON_MS = 18000;
+let duelHeartbeatHandle = null;
+function sendDuelHeartbeat(){
+  if(!duelRoomCode || !duelRole) return;
+  const field = duelRole === 'host' ? 'host_seen_at' : 'guest_seen_at';
+  fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}`, {
+    method:'PATCH', headers: sbHeaders({'Content-Type':'application/json'}),
+    body: JSON.stringify({[field]: new Date().toISOString()})
+  }).catch(()=>{});
+}
+function startDuelHeartbeat(){
+  clearInterval(duelHeartbeatHandle);
+  sendDuelHeartbeat();
+  duelHeartbeatHandle = setInterval(sendDuelHeartbeat, DUEL_HEARTBEAT_MS);
+}
+function stopDuelHeartbeat(){ clearInterval(duelHeartbeatHandle); duelHeartbeatHandle = null; }
+let duelRoomCode = null, duelRole = null, duelRounds = [], duelLocalRound = 1;
+let duelMyAnswer = null, duelPollHandle = null, duelRoundTimerHandle = null;
+let duelOpponentName = '', duelLastHostHp = 100, duelLastGuestHp = 100;
 
-function startDuel(){
-  duelPool = shuffle(ITEMS);
-  duelPos = 0; duelRoundNum = 1; playerHp = 100; monsterHp = 100; duelMissed = []; duelStreak = 0;
+function genDuelCode(){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = ''; for(let i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function openDuelSetup(){
+  document.getElementById('duelJoinCodeInput').value = '';
+  document.getElementById('duelSetupError').style.display = 'none';
+  showScreen('duelSetupScreen');
+}
+function showDuelSetupError(msg){
+  const el = document.getElementById('duelSetupError');
+  el.textContent = msg; el.style.display = 'block';
+}
+async function createDuelRoom(){
+  if(!supabaseReady()){ showDuelSetupError('Le duel en ligne nécessite Supabase (voir espace enseignant / config).'); return; }
+  duelRounds = pickRounds(DUEL_ROUNDS_COUNT).map(v=>[v[0], v[1]]);
+  duelRole = 'host';
+  let code = null;
+  for(let attempt=0; attempt<5 && !code; attempt++){
+    const candidate = genDuelCode();
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels`, {
+        method:'POST',
+        headers: sbHeaders({'Content-Type':'application/json', 'Prefer':'return=minimal'}),
+        body: JSON.stringify([{
+          code: candidate, classe: selectedClass, theme_id: selectedTheme.id,
+          rounds: duelRounds, host_name: currentPlayer, guest_name: null,
+          host_hp: 100, guest_hp: 100, round: 1, host_answer: null, guest_answer: null,
+          status: 'waiting'
+        }])
+      });
+      if(res.ok) code = candidate;
+    }catch(e){}
+  }
+  if(!code){ showDuelSetupError("Impossible de créer la partie, réessaie."); return; }
+  duelRoomCode = code;
+  duelLastHostHp = 100; duelLastGuestHp = 100;
+  document.getElementById('duelWaitCode').textContent = code;
+  showScreen('duelWaitScreen');
+  startDuelHeartbeat();
+  clearInterval(duelPollHandle);
+  duelPollHandle = setInterval(pollDuelWaiting, 1500);
+}
+async function pollDuelWaiting(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}&select=guest_name,status`, {headers: sbHeaders()});
+    if(!res.ok) return;
+    const rows = await res.json();
+    const row = rows[0];
+    if(row && row.status === 'playing'){
+      clearInterval(duelPollHandle);
+      duelOpponentName = row.guest_name || 'Adversaire';
+      startDuelLive();
+    }
+  }catch(e){}
+}
+function cancelDuelWait(){
+  clearInterval(duelPollHandle);
+  stopDuelHeartbeat();
+  if(duelRoomCode){
+    fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}`, {method:'DELETE', headers: sbHeaders()}).catch(()=>{});
+  }
+  duelRoomCode = null;
+  renderModeList(); showScreen('modeScreen');
+}
+async function joinDuelRoom(){
+  const code = document.getElementById('duelJoinCodeInput').value.trim().toUpperCase();
+  if(code.length !== 4){ showDuelSetupError('Entre le code à 4 caractères donné par ton adversaire.'); return; }
+  if(!supabaseReady()){ showDuelSetupError('Le duel en ligne nécessite Supabase.'); return; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${code}&select=*`, {headers: sbHeaders()});
+    const rows = res.ok ? await res.json() : [];
+    const row = rows[0];
+    if(!row){ showDuelSetupError("Code introuvable."); return; }
+    if(row.status !== 'waiting'){ showDuelSetupError("Cette partie a déjà commencé."); return; }
+    duelRoomCode = code; duelRole = 'guest'; duelRounds = row.rounds; duelOpponentName = row.host_name;
+    duelLastHostHp = row.host_hp; duelLastGuestHp = row.guest_hp;
+    await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${code}`, {
+      method:'PATCH', headers: sbHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({guest_name: currentPlayer, status:'playing'})
+    });
+    startDuelHeartbeat();
+    startDuelLive();
+  }catch(e){
+    showDuelSetupError("Connexion impossible, réessaie.");
+  }
+}
+function startDuelLive(){
+  duelLocalRound = 1; duelMyAnswer = null;
+  document.getElementById('duelPlayerLabel').textContent = currentPlayer;
+  document.getElementById('duelOpponentLabel').textContent = duelOpponentName || 'Adversaire';
   document.getElementById('duelPromptText').textContent = PROMPT;
+  playerHp = 100; monsterHp = 100;
   updateHpBars();
   showScreen('duelScreen');
-  renderDuelRound();
+  renderDuelLiveRound();
+  startDuelHeartbeat();
+  clearInterval(duelPollHandle);
+  duelPollHandle = setInterval(pollDuelLive, 1500);
 }
 function updateHpBars(){
   document.getElementById('playerHpNum').textContent = playerHp;
@@ -1093,15 +1386,12 @@ function updateHpBars(){
   document.getElementById('playerHpFill').style.width = Math.max(playerHp,0)+'%';
   document.getElementById('monsterHpFill').style.width = Math.max(monsterHp,0)+'%';
 }
-function nextDuelVerb(){
-  if(duelPos >= duelPool.length){ duelPool = shuffle(ITEMS); duelPos = 0; }
-  return duelPool[duelPos++];
-}
-function renderDuelRound(){
-  clearTimeout(duelTimerHandle);
-  if(playerHp<=0 || monsterHp<=0 || duelRoundNum > DUEL_MAX_ROUNDS){ finishDuel(); return; }
-  document.getElementById('duelRound').textContent = duelRoundNum;
-  const v = nextDuelVerb();
+function renderDuelLiveRound(){
+  clearTimeout(duelRoundTimerHandle);
+  duelMyAnswer = null;
+  document.getElementById('duelWaitingNote').style.display = 'none';
+  document.getElementById('duelRound').textContent = duelLocalRound;
+  const v = duelRounds[duelLocalRound-1];
   document.getElementById('duelBase').textContent = PREFIX + v[0];
   document.getElementById('monsterFace').classList.remove('hit');
 
@@ -1113,7 +1403,7 @@ function renderDuelRound(){
     const btn = document.createElement('button');
     btn.className = 'target-btn';
     btn.textContent = opt;
-    btn.onclick = ()=> handleDuelAnswer(btn, opt, v);
+    btn.onclick = ()=> submitDuelAnswer(opt, btn);
     grid.appendChild(btn);
   });
 
@@ -1121,15 +1411,25 @@ function renderDuelRound(){
   fill.style.transition = 'none';
   fill.style.width = '100%';
   requestAnimationFrame(()=>{
-    fill.style.transition = `width ${DUEL_TIME}ms linear`;
+    fill.style.transition = `width ${DUEL_ROUND_TIME}ms linear`;
     fill.style.width = '0%';
   });
-  duelTimerHandle = setTimeout(()=> resolveDuelRound(false, v, null), DUEL_TIME);
+  duelRoundTimerHandle = setTimeout(()=> submitDuelAnswer('', null), DUEL_ROUND_TIME);
 }
-function handleDuelAnswer(btn, chosen, v){
-  clearTimeout(duelTimerHandle);
+async function submitDuelAnswer(chosen, btn){
+  if(duelMyAnswer !== null) return;
+  duelMyAnswer = chosen;
+  clearTimeout(duelRoundTimerHandle);
   document.querySelectorAll('#duelTargetsGrid .target-btn').forEach(b=>b.onclick=null);
-  resolveDuelRound(chosen === v[1], v, btn);
+  if(btn) btn.classList.add(chosen === duelRounds[duelLocalRound-1][1] ? 'correct' : 'wrong');
+  document.getElementById('duelWaitingNote').style.display = 'block';
+  const field = duelRole === 'host' ? 'host_answer' : 'guest_answer';
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}`, {
+      method:'PATCH', headers: sbHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({[field]: chosen})
+    });
+  }catch(e){}
 }
 function floatDamage(text, cls){
   const layer = document.getElementById('dmgLayer');
@@ -1139,35 +1439,94 @@ function floatDamage(text, cls){
   layer.appendChild(el);
   setTimeout(()=> el.remove(), 700);
 }
-function resolveDuelRound(correct, v, btn){
-  if(btn){
-    if(correct) btn.classList.add('correct'); else {
-      btn.classList.add('wrong');
-      document.querySelectorAll('#duelTargetsGrid .target-btn').forEach(b=>{ if(b.textContent===v[1]) b.classList.add('correct'); });
+async function pollDuelLive(){
+  if(!duelRoomCode) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}&select=*`, {headers: sbHeaders()});
+    if(!res.ok) return;
+    const rows = await res.json();
+    const row = rows[0];
+    if(!row) return;
+    if(row.status === 'finished'){
+      clearInterval(duelPollHandle);
+      handleDuelFinish(row);
+      return;
     }
-  }
-  if(correct){
-    duelStreak++;
-    const dmg = 14 + Math.min(duelStreak*2, 10);
-    monsterHp = Math.max(monsterHp - dmg, 0);
-    document.getElementById('monsterFace').classList.add('hit');
-    floatDamage('-'+dmg, 'dmg');
-  } else {
-    duelStreak = 0;
-    duelMissed.push({base:v[0], answer:v[1]});
-    playerHp = Math.max(playerHp - 12, 0);
-    floatDamage('-12', 'dmg-hurt');
-  }
-  updateHpBars();
-  duelRoundNum++;
-  setTimeout(renderDuelRound, 550);
+    if(row.round > duelLocalRound){
+      applyDuelRoundResult(row);
+      return;
+    }
+    const oppSeenField = duelRole === 'host' ? row.guest_seen_at : row.host_seen_at;
+    if(oppSeenField){
+      const ageMs = Date.now() - new Date(oppSeenField).getTime();
+      if(ageMs > DUEL_ABANDON_MS){ handleDuelAbandon(); return; }
+    }
+    if(row.host_answer != null && row.guest_answer != null){
+      attemptResolveDuelRound(row);
+    }
+  }catch(e){}
 }
-function finishDuel(){
-  clearTimeout(duelTimerHandle);
-  const won = monsterHp <= 0 && playerHp > 0;
-  const title = won ? 'VICTOIRE !' : (playerHp<=0 ? 'DÉFAITE...' : 'MATCH NUL');
-  submitScore('duel', playerHp + (won ? 50 : 0));
-  showResults(title, playerHp, duelRoundNum-1, duelMissed, 'PV restants (adversaire : '+monsterHp+')');
+async function attemptResolveDuelRound(row){
+  const v = duelRounds[duelLocalRound-1];
+  const correct = v[1];
+  const hostCorrect = row.host_answer === correct;
+  const guestCorrect = row.guest_answer === correct;
+  let newHostHp = row.host_hp, newGuestHp = row.guest_hp;
+  if(hostCorrect && !guestCorrect) newGuestHp = Math.max(0, newGuestHp - DUEL_DMG);
+  else if(guestCorrect && !hostCorrect) newHostHp = Math.max(0, newHostHp - DUEL_DMG);
+  else if(hostCorrect && guestCorrect){ newHostHp = Math.max(0,newHostHp-DUEL_DMG); newGuestHp = Math.max(0,newGuestHp-DUEL_DMG); }
+  const finished = newHostHp<=0 || newGuestHp<=0 || duelLocalRound >= duelRounds.length;
+  const body = { host_hp:newHostHp, guest_hp:newGuestHp, round: duelLocalRound+1, host_answer:null, guest_answer:null };
+  if(finished) body.status = 'finished';
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}&round=eq.${duelLocalRound}`, {
+      method:'PATCH', headers: sbHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify(body)
+    });
+  }catch(e){}
+}
+function applyDuelRoundResult(row){
+  const deltaHost = duelLastHostHp - row.host_hp;
+  const deltaGuest = duelLastGuestHp - row.guest_hp;
+  const myDelta = duelRole === 'host' ? deltaHost : deltaGuest;
+  const oppDelta = duelRole === 'host' ? deltaGuest : deltaHost;
+  if(myDelta > 0) floatDamage('-'+myDelta, 'dmg-hurt');
+  if(oppDelta > 0){ floatDamage('-'+oppDelta, 'dmg'); document.getElementById('monsterFace').classList.add('hit'); }
+  duelLastHostHp = row.host_hp; duelLastGuestHp = row.guest_hp;
+  playerHp = duelRole === 'host' ? row.host_hp : row.guest_hp;
+  monsterHp = duelRole === 'host' ? row.guest_hp : row.host_hp;
+  updateHpBars();
+  duelLocalRound = row.round;
+  if(row.status === 'finished'){
+    clearInterval(duelPollHandle);
+    setTimeout(()=> handleDuelFinish(row), 500);
+  } else {
+    setTimeout(renderDuelLiveRound, 550);
+  }
+}
+function handleDuelFinish(row){
+  clearInterval(duelPollHandle);
+  clearTimeout(duelRoundTimerHandle);
+  stopDuelHeartbeat();
+  const myHp = duelRole === 'host' ? row.host_hp : row.guest_hp;
+  const oppHp = duelRole === 'host' ? row.guest_hp : row.host_hp;
+  const won = oppHp <= 0 && myHp > 0;
+  const title = won ? 'VICTOIRE !' : (myHp<=0 ? 'DÉFAITE...' : 'MATCH NUL');
+  submitScore('duel', myHp + (won ? 50 : 0));
+  showResults(title, myHp, duelLocalRound, [], 'PV restants (adversaire : '+oppHp+')');
+}
+function handleDuelAbandon(){
+  clearInterval(duelPollHandle);
+  clearTimeout(duelRoundTimerHandle);
+  stopDuelHeartbeat();
+  if(duelRoomCode){
+    fetch(`${SUPABASE_URL}/rest/v1/classarena_duels?code=eq.${duelRoomCode}`, {
+      method:'PATCH', headers: sbHeaders({'Content-Type':'application/json'}),
+      body: JSON.stringify({status:'finished'})
+    }).catch(()=>{});
+  }
+  submitScore('duel', playerHp + 50);
+  showResults('ADVERSAIRE PARTI', playerHp, duelLocalRound, [], 'Victoire par abandon — PV restants : '+playerHp);
 }
 
 /* =========================================================
