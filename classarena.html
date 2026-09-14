@@ -878,17 +878,22 @@ async function fetchLeaderboard(classe, mode){
 let CONFIG = loadConfig();
 
 function loadConfig(){
+  let saved = null;
   try{
     const raw = localStorage.getItem('classarena_config_v2');
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.classes) && Array.isArray(parsed.themes)){
-        if(!parsed.rosters) parsed.rosters = {};
-        return parsed;
-      }
+      if(parsed && Array.isArray(parsed.classes) && Array.isArray(parsed.themes)) saved = parsed;
     }
   }catch(e){}
-  return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  if(!saved) return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  if(!saved.rosters) saved.rosters = {};
+  DEFAULT_CONFIG.classes.forEach(c=>{ if(!saved.classes.includes(c)) saved.classes.push(c); });
+  const savedIds = new Set(saved.themes.map(t=>t.id));
+  DEFAULT_CONFIG.themes.forEach(t=>{
+    if(!savedIds.has(t.id)) saved.themes.push(JSON.parse(JSON.stringify(t)));
+  });
+  return saved;
 }
 function saveConfig(){ try{ localStorage.setItem('classarena_config_v2', JSON.stringify(CONFIG)); }catch(e){} }
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null ? '' : s; return d.innerHTML; }
