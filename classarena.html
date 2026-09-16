@@ -95,10 +95,12 @@
   .shoot-c .mode-icon{background:rgba(90,200,250,.15); color:var(--blue);}
   .duel-c .mode-icon{background:rgba(255,183,77,.15); color:var(--amber);}
   .pairs-c .mode-icon{background:rgba(185,140,255,.15); color:var(--violet);}
+  .guide-c .mode-icon{background:rgba(90,200,250,.18); color:var(--blue);}
   .swipe-c:hover, .swipe-c:focus-visible{border-color:var(--lime);}
   .shoot-c:hover, .shoot-c:focus-visible{border-color:var(--blue);}
   .duel-c:hover, .duel-c:focus-visible{border-color:var(--amber);}
   .pairs-c:hover, .pairs-c:focus-visible{border-color:var(--violet);}
+  .guide-c:hover, .guide-c:focus-visible{border-color:var(--blue);}
   .mode-title{font-weight:700; font-size:17px; margin:0 0 3px;}
   .mode-desc{color:var(--dim); font-size:13px; margin:0; line-height:1.4;}
 
@@ -244,28 +246,34 @@
     100%{opacity:0; transform:translate(-50%,-45px);}
   }
 
-  /* ---------- PAIRS (MEMORY) ---------- */
+  /* ---------- COURS GUIDÉ ---------- */
+  #guideScreen{justify-content:flex-start;}
+  .guide-input{
+    width:100%; background:var(--bg2); border:2px solid var(--bg3); border-radius:14px;
+    color:var(--text); font-family:inherit; font-size:16px; padding:14px 16px;
+    text-align:center; margin-bottom:14px;
+  }
+  .guide-input:focus{outline:none; border-color:var(--blue);}
+  .guide-feedback{
+    width:100%; border-radius:14px; padding:14px 16px; margin-bottom:14px; text-align:center; display:none;
+  }
+  .guide-feedback.ok{background:rgba(198,255,61,.12); border:2px solid var(--lime); color:var(--lime);}
+  .guide-feedback.bad{background:rgba(255,92,114,.12); border:2px solid var(--coral); color:var(--coral);}
+  .guide-feedback .guide-answer{color:var(--text); font-weight:700; margin-top:4px;}
+  .guide-explain{color:var(--dim); font-size:13px; margin-top:8px; font-style:italic;}
+
+  /* ---------- PAIRS ---------- */
   #pairsScreen{justify-content:flex-start;}
-  .memory-grid{
-    display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
-    width:100%; flex:1; align-content:center;
+  .pairs-columns{display:flex; gap:10px; width:100%; flex:1; overflow-y:auto; overflow-x:hidden;}
+  .pairs-col{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px;}
+  .pairs-tile{
+    background:var(--bg2); border:2px solid var(--bg3); border-radius:10px;
+    padding:12px 8px; font-size:13px; font-weight:600; text-align:center;
+    cursor:pointer; word-break:break-word; color:var(--text); flex:none;
   }
-  .memory-card{position:relative; aspect-ratio:1; perspective:600px; cursor:pointer;}
-  .memory-card-inner{
-    position:relative; width:100%; height:100%; transition:transform .4s;
-    transform-style:preserve-3d;
-  }
-  .memory-card.flipped .memory-card-inner, .memory-card.matched .memory-card-inner{
-    transform:rotateY(180deg);
-  }
-  .memory-face{
-    position:absolute; inset:0; backface-visibility:hidden; border-radius:12px;
-    display:flex; align-items:center; justify-content:center; padding:6px;
-    text-align:center; font-size:12px; font-weight:700; line-height:1.2;
-  }
-  .memory-face.back{background:var(--bg2); border:2px solid var(--bg3); color:var(--dim); font-size:20px;}
-  .memory-face.front{background:var(--bg3); border:2px solid var(--violet); transform:rotateY(180deg); color:var(--text);}
-  .memory-card.matched .memory-face.front{background:rgba(198,255,61,.18); border-color:var(--lime); color:var(--lime);}
+  .pairs-tile.selected{border-color:var(--violet); background:rgba(185,140,255,.18);}
+  .pairs-tile.matched{background:rgba(198,255,61,.18); border-color:var(--lime); color:var(--lime); cursor:default; opacity:.65;}
+  .pairs-tile.wrong{border-color:var(--coral); background:rgba(255,92,114,.18);}
 
   /* ---------- RESULTS ---------- */
   .result-score{font-family:'Bungee',sans-serif; font-size:56px; margin:10px 0 2px; color:var(--lime); flex:none;}
@@ -507,15 +515,37 @@
     <div class="targets-grid" id="duelTargetsGrid"></div>
   </section>
 
-  <!-- PAIRS (MEMORY) -->
+  <!-- COURS GUIDÉ -->
+  <section class="screen" id="guideScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backFromGame()">←</button>
+      <div class="stat-pill">Question <b id="guideRoundLabel">1/15</b></div>
+      <div class="stat-pill">Score <b id="guideScoreLabel">0</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="guideProgress" style="width:0%"></div></div>
+    <p class="target-sub" id="guidePromptText">Trouve la bonne réponse</p>
+    <div class="target-word" id="guideWord" style="margin-bottom:18px;">mot</div>
+    <input type="text" id="guideInput" class="guide-input" placeholder="Tape ta réponse ici" autocomplete="off" onkeydown="if(event.key==='Enter') checkGuideAnswer();">
+    <div class="guide-feedback" id="guideFeedback">
+      <div id="guideFeedbackTitle"></div>
+      <div class="guide-answer" id="guideFeedbackAnswer"></div>
+      <div class="guide-explain" id="guideFeedbackExplain"></div>
+    </div>
+    <button class="btn primary" style="width:100%;" id="guideActionBtn" onclick="checkGuideAnswer()">Valider</button>
+  </section>
+
+  <!-- PAIRS -->
   <section class="screen" id="pairsScreen">
     <div class="topbar">
       <button class="icon-btn" onclick="backFromGame()">←</button>
       <div class="stat-pill">Coups <b id="pairsMoves">0</b></div>
       <div class="stat-pill">Temps <b id="pairsTimer">0:00</b></div>
     </div>
-    <p class="target-sub" style="margin-top:2px;">Retourne les cartes pour associer chaque terme à sa bonne réponse.</p>
-    <div class="memory-grid" id="memoryGrid"></div>
+    <p class="target-sub" style="margin-top:2px;">Touche un terme à gauche, puis sa bonne réponse à droite.</p>
+    <div class="pairs-columns">
+      <div class="pairs-col" id="pairsColLeft"></div>
+      <div class="pairs-col" id="pairsColRight"></div>
+    </div>
   </section>
 
   <!-- RESULTS -->
@@ -677,14 +707,26 @@ const DEFAULT_VOCAB_RICHE = [
 ];
 
 const DEFAULT_CONJUGAISON = [
-["être - il - présent","est",""],["avoir - je - futur","aurai",""],["aller - nous - imparfait","allions",""],
-["faire - vous - passé composé","avez fait",""],["dire - tu - présent","dis",""],
-["venir - ils - futur","viendront",""],["pouvoir - je - présent","peux",""],["vouloir - elle - présent","veut",""],
-["prendre - nous - passé composé","avons pris",""],["voir - vous - imparfait","voyiez",""],
-["savoir - je - futur","saurai",""],["devoir - tu - présent","dois",""],["mettre - ils - passé composé","ont mis",""],
-["croire - elle - présent","croit",""],["écrire - nous - présent","écrivons",""],["boire - je - passé composé","ai bu",""],
-["partir - vous - présent","partez",""],["finir - ils - futur","finiront",""],["être - nous - imparfait","étions",""],
-["avoir - elle - passé composé","a eu",""]
+["être - il - présent","est","être est totalement irrégulier : je suis, tu es, il est, nous sommes, vous êtes, ils sont."],
+["avoir - je - futur","aurai","Futur d'avoir : j'aurai, tu auras, il aura, nous aurons, vous aurez, ils auront."],
+["aller - nous - imparfait","allions","Imparfait : on part du radical 'all-' + terminaisons -ais,-ais,-ait,-ions,-iez,-aient."],
+["faire - vous - passé composé","avez fait","Passé composé = avoir/être au présent + participe passé. Faire → fait."],
+["dire - tu - présent","dis","Présent de dire : je dis, tu dis, il dit, nous disons, vous dites, ils disent."],
+["venir - ils - futur","viendront","Futur irrégulier : je viendrai, tu viendras... ils viendront."],
+["pouvoir - je - présent","peux","Pouvoir au présent : je peux, tu peux, il peut, nous pouvons, vous pouvez, ils peuvent."],
+["vouloir - elle - présent","veut","Vouloir au présent : je veux, tu veux, il/elle veut, nous voulons, vous voulez, ils veulent."],
+["prendre - nous - passé composé","avons pris","Participe passé de prendre : pris (irrégulier)."],
+["voir - vous - imparfait","voyiez","Imparfait de voir : radical 'voy-' + -iez."],
+["savoir - je - futur","saurai","Futur irrégulier de savoir : je saurai (pas 'saverai')."],
+["devoir - tu - présent","dois","Devoir au présent : je dois, tu dois, il doit, nous devons, vous devez, ils doivent."],
+["mettre - ils - passé composé","ont mis","Participe passé de mettre : mis (invariable ici, un seul 't')."],
+["croire - elle - présent","croit","Présent de croire : je crois, tu crois, il/elle croit, nous croyons, vous croyez, ils croient."],
+["écrire - nous - présent","écrivons","Présent d'écrire : j'écris, tu écris, il écrit, nous écrivons, vous écrivez, ils écrivent."],
+["boire - je - passé composé","ai bu","Participe passé de boire : bu (irrégulier)."],
+["partir - vous - présent","partez","Présent de partir : je pars, tu pars, il part, nous partons, vous partez, ils partent."],
+["finir - ils - futur","finiront","Futur régulier des verbes en -ir : infinitif + -ont."],
+["être - nous - imparfait","étions","Imparfait d'être : radical 'ét-' + -ions."],
+["avoir - elle - passé composé","a eu","Participe passé d'avoir : eu (se prononce 'u')."]
 ];
 
 const DEFAULT_ORTHOGRAPHE = [
@@ -699,6 +741,65 @@ const DEFAULT_ORTHOGRAPHE = [
 ];
 
 const ALL_CLASSES = ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"];
+
+const DEFAULT_TEMPS_NARRATION = [
+["Il ___ quand le téléphone sonna. (dormait/a dormi)","dormait",""],
+["Soudain, elle ___ la porte. (ouvrait/a ouvert)","a ouvert",""],
+["Chaque matin, il ___ son café. (buvait/a bu)","buvait",""],
+["Hier, nous ___ au cinéma. (allions/sommes allés)","sommes allés",""],
+["Le ciel ___ gris ce jour-là. (était/a été)","était",""],
+["Tout à coup, un bruit ___. (retentissait/a retenti)","a retenti",""],
+["Quand j'étais petit, je ___ à la mer chaque été. (allais/suis allé)","allais",""],
+["Elle ___ la lettre quand on frappa à la porte. (lisait/a lu)","lisait",""],
+["Il faisait nuit quand ils ___. (arrivaient/sont arrivés)","sont arrivés",""],
+["Pendant qu'il ___, le téléphone a sonné. (travaillait/a travaillé)","travaillait",""],
+["En 1990, elle ___ à Paris. (habitait/a habité)","habitait",""],
+["Il ___ trois fois avant de réussir. (essayait/a essayé)","a essayé",""],
+["Les oiseaux ___ dans le ciel. (chantaient/ont chanté)","chantaient",""],
+["Je ___ la vaisselle quand tu es arrivé. (faisais/ai fait)","faisais",""],
+["Victor ___ le monstre. (créa/crée)","créa",""],
+["Elle ___ un cri terrible. (poussa/pousse)","poussa",""],
+["Il ___ dans la forêt. (courut/court)","courut",""],
+["Ils ___ la vérité trop tard. (comprirent/comprennent)","comprirent",""]
+];
+
+const DEFAULT_SYNTAXE = [
+["Il faut que je vais au marché.","Il faut que j'aille au marché.","Après « il faut que », on utilise le subjonctif : que j'aille, que tu ailles, qu'il aille."],
+["Je sais pas où il est.","Je ne sais pas où il est.","À l'écrit, la négation se compose de deux mots : ne...pas. On ne doit pas oublier le « ne »."],
+["Les enfants a mangé le gâteau.","Les enfants ont mangé le gâteau.","Le verbe s'accorde avec son sujet : les enfants (pluriel) → ont (pas a)."],
+["Si j'aurais su, je serais venu.","Si j'avais su, je serais venu.","Après « si » exprimant une hypothèse passée, on utilise le plus-que-parfait, jamais le conditionnel."],
+["Elle a resté chez elle.","Elle est restée chez elle.","Rester se conjugue avec l'auxiliaire être au passé composé, pas avoir."],
+["Les livres que j'ai lu sont bien.","Les livres que j'ai lus sont bien.","Le participe passé s'accorde avec le COD placé avant le verbe : que (= les livres) → lus."],
+["Je me rappelle de son nom.","Je me souviens de son nom.","« Se rappeler » ne prend pas « de » (je me rappelle son nom) ; c'est « se souvenir » qui prend « de »."],
+["Malgré qu'il pleuve, on sort.","Bien qu'il pleuve, on sort.","« Malgré que » est incorrect en français standard ; on utilise « bien que » + subjonctif."],
+["J'ai été au marché ce matin.","Je suis allé au marché ce matin.","« Aller » se conjugue avec être au passé composé : je suis allé (pas j'ai été, qui est une confusion avec « être »)."],
+["Il faut que tu es à l'heure.","Il faut que tu sois à l'heure.","Après « il faut que », subjonctif : que tu sois (pas que tu es)."],
+["On a été au cinéma hier.","On est allé au cinéma hier.","Encore le verbe aller au passé composé : on est allé, pas on a été."],
+["Je voudrais que tu viens.","Je voudrais que tu viennes.","Après « vouloir que », subjonctif : que tu viennes."],
+["Bien qu'il est fatigué, il continue.","Bien qu'il soit fatigué, il continue.","« Bien que » est toujours suivi du subjonctif : qu'il soit."]
+];
+
+const DEFAULT_PRONOUNS = [
+["___ am a student. (I/Me)","I",""],
+["___ is my brother. (He/Him)","He",""],
+["___ speaks French. (She/Her)","She",""],
+["___ are late again! (They/Them)","They",""],
+["___ is raining. (It/Its)","It",""],
+["___ live in Paris. (We/Us)","We",""],
+["She gave ___ a present. (I/me)","me",""],
+["I saw ___ yesterday. (he/him)","him",""],
+["Can you help ___? (she/her)","her",""],
+["The teacher called ___. (they/them)","them",""],
+["Listen to ___! (we/us)","us",""],
+["I don't understand ___. (it/its)","it",""],
+["This is ___ book. (I/my)","my",""],
+["Is this ___ car? (you/your)","your",""],
+["___ dog is very friendly. (his/he)","his",""],
+["___ name is Sarah. (Her/She)","Her",""],
+["The cat licked ___ paw. (its/it)","its",""],
+["___ house is big. (Our/We)","Our",""],
+["___ parents are teachers. (Their/They)","Their",""]
+];
 
 const DEFAULT_CONDITIONALS = [
 ["If it ___ tomorrow, we will cancel the trip. (rains/rained)","rains",""],
@@ -750,8 +851,9 @@ const DEFAULT_CONFIG = {
       classes: ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"],
       prefix: "to ",
       prompt: "Quelle est la bonne forme au prétérit ?",
+      distractorStyle: "verb-ed",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_VERBS
     },
@@ -762,7 +864,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quelle est la traduction ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_MYSTERY_VOCAB
     },
@@ -773,7 +875,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quelle est la traduction ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_ART_TO_AD_VOCAB
     },
@@ -784,7 +886,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quel est un synonyme plus riche ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_VOCAB_RICHE
     },
@@ -795,7 +897,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quelle est la bonne forme conjuguée ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_CONJUGAISON
     },
@@ -806,7 +908,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quel est le bon mot ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_ORTHOGRAPHE
     },
@@ -817,7 +919,7 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quel est le bon modal ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_MODALS
     },
@@ -828,9 +930,42 @@ const DEFAULT_CONFIG = {
       prefix: "",
       prompt: "Quelle est la bonne forme ?",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs"],
+      modes: ["swipe","shoot","duel","pairs","guide"],
       lockedMode: "swipe",
       items: DEFAULT_CONDITIONALS
+    },
+    {
+      id: "pronouns",
+      title: "Pronoms personnels anglais",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quel est le bon pronom ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs","guide"],
+      lockedMode: "swipe",
+      items: DEFAULT_PRONOUNS
+    },
+    {
+      id: "temps-narration",
+      title: "Les temps dans la narration",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Quel temps utiliser ?",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs","guide"],
+      lockedMode: "swipe",
+      items: DEFAULT_TEMPS_NARRATION
+    },
+    {
+      id: "syntaxe",
+      title: "Syntaxe — corrige la phrase",
+      classes: ALL_CLASSES,
+      prefix: "",
+      prompt: "Corrige la phrase (recopie-la entièrement, correctement).",
+      modeMode: "locked",
+      modes: ["guide"],
+      lockedMode: "guide",
+      items: DEFAULT_SYNTAXE
     }
   ]
 };
@@ -839,7 +974,8 @@ const MODE_DEFS = {
   swipe:{icon:"↔", cls:"swipe-c", title:"Swipe or Skip", desc:"Vrai ou faux : swipe à droite si c'est correct, à gauche si c'est faux."},
   shoot:{icon:"◎", cls:"shoot-c", title:"Vise Juste", desc:"Touche la bonne réponse parmi les cibles avant la fin du chrono."},
   duel:{icon:"⚔", cls:"duel-c", title:"Duel", desc:"Chaque bonne réponse inflige des dégâts, chaque erreur laisse l'adversaire riposter."},
-  pairs:{icon:"▦", cls:"pairs-c", title:"Paires", desc:"Retourne les cartes pour associer chaque terme à sa bonne réponse, en un minimum de coups."}
+  pairs:{icon:"▦", cls:"pairs-c", title:"Relie les Paires", desc:"Touche un terme puis sa bonne réponse pour les associer, en un minimum de coups."},
+  guide:{icon:"📘", cls:"guide-c", title:"Cours guidé", desc:"Tape ta réponse toi-même, avec la correction et une explication à chaque fois. Sans pression de score."}
 };
 
 /* ---------------- SUPABASE (leaderboard backend) ----------------
@@ -892,6 +1028,17 @@ function loadConfig(){
   const savedIds = new Set(saved.themes.map(t=>t.id));
   DEFAULT_CONFIG.themes.forEach(t=>{
     if(!savedIds.has(t.id)) saved.themes.push(JSON.parse(JSON.stringify(t)));
+  });
+  saved.themes.forEach(t=>{
+    const def = DEFAULT_CONFIG.themes.find(d=>d.id===t.id);
+    if(!def) return;
+    if(def.distractorStyle && !t.distractorStyle) t.distractorStyle = def.distractorStyle;
+    if(!def.modes.every(m=>t.modes.includes(m))){
+      def.modes.forEach(m=>{ if(!t.modes.includes(m)) t.modes.push(m); });
+    }
+    const sameContent = t.items.length === def.items.length &&
+      t.items.every((it,i)=> it[0]===def.items[i][0] && it[1]===def.items[i][1]);
+    if(sameContent) t.items = JSON.parse(JSON.stringify(def.items));
   });
   return saved;
 }
@@ -1010,11 +1157,37 @@ function launchGame(mode){
   else if(mode === 'shoot') startShoot();
   else if(mode === 'duel') openDuelSetup();
   else if(mode === 'pairs') startPairs();
+  else if(mode === 'guide') startGuide();
 }
 
 /* ---------------- SHARED HELPERS ---------------- */
 function shuffle(arr){ const a=arr.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function pickRounds(n){ const pool = shuffle(ITEMS); const rounds=[]; for(let i=0;i<n;i++){ rounds.push(pool[i % pool.length]); } return shuffle(rounds); }
+
+function regularizeVerb(base){
+  const w = base.toLowerCase().trim();
+  if(/e$/.test(w)) return base + 'd';
+  if(/[^aeiou]y$/.test(w)) return base.slice(0,-1) + 'ied';
+  if(w.length <= 5 && /[^aeiou][aeiou][^aeiouwxy]$/.test(w)) return base + base.slice(-1) + 'ed';
+  return base + 'ed';
+}
+function getDistractors(correctBase, correctAnswer, count){
+  if(selectedTheme && selectedTheme.distractorStyle === 'verb-ed'){
+    let result = [];
+    const ownDecoy = regularizeVerb(correctBase);
+    if(ownDecoy !== correctAnswer) result.push(ownDecoy);
+    let pool = shuffle(Array.from(new Set(
+      ITEMS.filter(x=>x[0]!==correctBase).map(x=>regularizeVerb(x[0]))
+    ))).filter(d=>d!==correctAnswer);
+    for(const d of pool){ if(result.length>=count) break; if(!result.includes(d)) result.push(d); }
+    if(result.length < count){
+      const fallback = shuffle(ITEMS.filter(x=>x[1]!==correctAnswer)).map(x=>x[1]);
+      for(const d of fallback){ if(result.length>=count) break; if(!result.includes(d)) result.push(d); }
+    }
+    return result.slice(0, count);
+  }
+  return shuffle(ITEMS.filter(x=>x[1]!==correctAnswer)).slice(0,count).map(x=>x[1]);
+}
 
 /* =========================================================
    SWIPE GAME
@@ -1027,9 +1200,7 @@ function startSwipe(){
     const isTrue = Math.random() < 0.5;
     let claim = v[1];
     if(!isTrue){
-      let decoy;
-      do{ decoy = ITEMS[Math.floor(Math.random()*ITEMS.length)][1]; } while(decoy === v[1]);
-      claim = decoy;
+      claim = getDistractors(v[0], v[1], 1)[0];
     }
     return {base:v[0], correctPast:v[1], claim, isTrue, fr:v[2]};
   });
@@ -1136,7 +1307,7 @@ function renderShootRound(){
   document.getElementById('shootRoundLabel').textContent = 'Élément '+(shootIdx+1)+'/'+SHOOT_TOTAL;
   document.getElementById('shootBase').textContent = PREFIX + v[0];
 
-  const distractors = shuffle(ITEMS.filter(x=>x[1]!==v[1])).slice(0,3).map(x=>x[1]);
+  const distractors = getDistractors(v[0], v[1], 3);
   const options = shuffle([v[1], ...distractors]);
   const arena = document.getElementById('shootArena');
   arena.querySelectorAll('.shoot-bubble').forEach(b=>b.remove());
@@ -1400,7 +1571,7 @@ function renderDuelLiveRound(){
   document.getElementById('duelBase').textContent = PREFIX + v[0];
   document.getElementById('monsterFace').classList.remove('hit');
 
-  const distractors = shuffle(ITEMS.filter(x=>x[1]!==v[1])).slice(0,3).map(x=>x[1]);
+  const distractors = getDistractors(v[0], v[1], 3);
   const options = shuffle([v[1], ...distractors]);
   const grid = document.getElementById('duelTargetsGrid');
   grid.innerHTML = '';
@@ -1535,76 +1706,137 @@ function handleDuelAbandon(){
 }
 
 /* =========================================================
-   PAIRS (MEMORY)
+   COURS GUIDÉ
    ========================================================= */
-let pairsCards = [], pairsFlipped = [], pairsMatches = 0, pairsMoves = 0, pairsTotalPairs = 0;
+let guideRounds = [], guideIndex = 0, guideScore = 0, guideMissed = [], guideAnswered = false;
+const GUIDE_MAX = 15;
+
+function normalizeAnswer(s){
+  return String(s||'').trim().toLowerCase().replace(/\s+/g,' ').replace(/[.!?]+$/,'');
+}
+function startGuide(){
+  guideRounds = shuffle(ITEMS.slice());
+  if(guideRounds.length > GUIDE_MAX) guideRounds = guideRounds.slice(0, GUIDE_MAX);
+  guideIndex = 0; guideScore = 0; guideMissed = [];
+  document.getElementById('guideScoreLabel').textContent = 0;
+  document.getElementById('guidePromptText').textContent = PROMPT;
+  showScreen('guideScreen');
+  renderGuideRound();
+}
+function renderGuideRound(){
+  if(guideIndex >= guideRounds.length){ finishGuide(); return; }
+  guideAnswered = false;
+  document.getElementById('guideRoundLabel').textContent = (guideIndex+1)+'/'+guideRounds.length;
+  document.getElementById('guideProgress').style.width = (guideIndex/guideRounds.length*100)+'%';
+  const v = guideRounds[guideIndex];
+  document.getElementById('guideWord').textContent = PREFIX + v[0];
+  const input = document.getElementById('guideInput');
+  input.value = ''; input.disabled = false;
+  document.getElementById('guideFeedback').style.display = 'none';
+  document.getElementById('guideFeedback').className = 'guide-feedback';
+  const btn = document.getElementById('guideActionBtn');
+  btn.textContent = 'Valider';
+  btn.onclick = checkGuideAnswer;
+  setTimeout(()=> input.focus(), 50);
+}
+function checkGuideAnswer(){
+  if(guideAnswered) return;
+  guideAnswered = true;
+  const v = guideRounds[guideIndex];
+  const input = document.getElementById('guideInput');
+  const val = input.value;
+  input.disabled = true;
+  const correct = normalizeAnswer(val) === normalizeAnswer(v[1]);
+  const fb = document.getElementById('guideFeedback');
+  fb.style.display = 'block';
+  fb.className = 'guide-feedback ' + (correct ? 'ok' : 'bad');
+  document.getElementById('guideFeedbackTitle').textContent = correct ? '✓ Correct !' : '✗ Pas tout à fait.';
+  document.getElementById('guideFeedbackAnswer').textContent = correct ? '' : 'Réponse attendue : ' + v[1];
+  document.getElementById('guideFeedbackExplain').textContent = v[2] || '';
+  if(correct){ guideScore++; document.getElementById('guideScoreLabel').textContent = guideScore; }
+  else { guideMissed.push({base:v[0], answer:v[1]}); }
+  const btn = document.getElementById('guideActionBtn');
+  btn.textContent = (guideIndex+1 >= guideRounds.length) ? 'Terminer' : 'Suivant';
+  btn.onclick = ()=>{ guideIndex++; renderGuideRound(); };
+}
+function finishGuide(){
+  document.getElementById('guideProgress').style.width = '100%';
+  submitScore('guide', guideScore);
+  showResults('COURS TERMINÉ', guideScore, guideRounds.length, guideMissed);
+}
+
+/* =========================================================
+   RELIE LES PAIRES
+   ========================================================= */
+let pairsLeft = [], pairsRight = [], pairsSelected = null, pairsWrongPair = null;
+let pairsMatches = 0, pairsMoves = 0, pairsTotalPairs = 0;
 let pairsTimerHandle = null, pairsSeconds = 0, pairsLocked = false;
 
 function startPairs(){
   const pairsCount = Math.min(8, ITEMS.length);
   const chosen = shuffle(ITEMS).slice(0, pairsCount);
-  let cards = [];
-  chosen.forEach((item, idx)=>{
-    cards.push({key:idx, text:item[0]});
-    cards.push({key:idx, text:item[1]});
-  });
-  pairsCards = shuffle(cards);
-  pairsFlipped = []; pairsMatches = 0; pairsMoves = 0; pairsTotalPairs = pairsCount;
+  pairsLeft = shuffle(chosen.map((item,idx)=>({key:idx, text:item[0], matched:false})));
+  pairsRight = shuffle(chosen.map((item,idx)=>({key:idx, text:item[1], matched:false})));
+  pairsSelected = null; pairsWrongPair = null;
+  pairsMatches = 0; pairsMoves = 0; pairsTotalPairs = pairsCount;
   pairsSeconds = 0; pairsLocked = false;
   document.getElementById('pairsMoves').textContent = 0;
   document.getElementById('pairsTimer').textContent = '0:00';
   clearInterval(pairsTimerHandle);
   pairsTimerHandle = setInterval(()=>{ pairsSeconds++; updatePairsTimerDisplay(); }, 1000);
-  renderPairsGrid();
+  renderPairsColumns();
   showScreen('pairsScreen');
 }
 function updatePairsTimerDisplay(){
   const m = Math.floor(pairsSeconds/60), s = pairsSeconds%60;
   document.getElementById('pairsTimer').textContent = m+':'+String(s).padStart(2,'0');
 }
-function renderPairsGrid(){
-  const grid = document.getElementById('memoryGrid');
-  grid.innerHTML = '';
-  pairsCards.forEach((c,i)=>{
-    const card = document.createElement('div');
-    card.className = 'memory-card';
-    card.dataset.index = i;
-    card.innerHTML = `
-      <div class="memory-card-inner">
-        <div class="memory-face back">?</div>
-        <div class="memory-face front">${escapeHtml(c.text)}</div>
-      </div>`;
-    card.onclick = ()=> flipPairsCard(i);
-    grid.appendChild(card);
-  });
+function renderPairsColumns(){
+  const renderCol = (arr, side, elId)=>{
+    const col = document.getElementById(elId);
+    col.innerHTML = '';
+    arr.forEach((c,i)=>{
+      const tile = document.createElement('div');
+      let cls = 'pairs-tile';
+      if(c.matched) cls += ' matched';
+      else if(pairsSelected && pairsSelected.side===side && pairsSelected.idx===i) cls += ' selected';
+      else if(pairsWrongPair && pairsWrongPair[side]===i) cls += ' wrong';
+      tile.className = cls;
+      tile.textContent = c.text;
+      if(!c.matched) tile.onclick = ()=> selectPairsTile(side, i);
+      col.appendChild(tile);
+    });
+  };
+  renderCol(pairsLeft, 'left', 'pairsColLeft');
+  renderCol(pairsRight, 'right', 'pairsColRight');
 }
-function flipPairsCard(i){
+function selectPairsTile(side, idx){
   if(pairsLocked) return;
-  const cardEl = document.querySelector('.memory-card[data-index="'+i+'"]');
-  if(!cardEl || cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
-  if(pairsFlipped.length >= 2) return;
-  cardEl.classList.add('flipped');
-  pairsFlipped.push(i);
-  if(pairsFlipped.length === 2){
-    pairsMoves++;
-    document.getElementById('pairsMoves').textContent = pairsMoves;
+  const arr = side==='left' ? pairsLeft : pairsRight;
+  if(arr[idx].matched) return;
+  if(pairsSelected && pairsSelected.side===side && pairsSelected.idx===idx){
+    pairsSelected = null; renderPairsColumns(); return;
+  }
+  if(!pairsSelected || pairsSelected.side===side){
+    pairsSelected = {side, idx}; renderPairsColumns(); return;
+  }
+  pairsMoves++;
+  document.getElementById('pairsMoves').textContent = pairsMoves;
+  const other = pairsSelected;
+  const otherArr = other.side==='left' ? pairsLeft : pairsRight;
+  if(otherArr[other.idx].key === arr[idx].key){
+    otherArr[other.idx].matched = true; arr[idx].matched = true;
+    pairsMatches++; pairsSelected = null;
+    renderPairsColumns();
+    if(pairsMatches === pairsTotalPairs){ finishPairs(); }
+  } else {
     pairsLocked = true;
-    const [i1,i2] = pairsFlipped;
-    const c1 = pairsCards[i1], c2 = pairsCards[i2];
-    if(c1.key === c2.key){
-      setTimeout(()=>{
-        document.querySelector('.memory-card[data-index="'+i1+'"]').classList.add('matched');
-        document.querySelector('.memory-card[data-index="'+i2+'"]').classList.add('matched');
-        pairsFlipped = []; pairsLocked = false; pairsMatches++;
-        if(pairsMatches === pairsTotalPairs){ finishPairs(); }
-      }, 350);
-    } else {
-      setTimeout(()=>{
-        document.querySelector('.memory-card[data-index="'+i1+'"]').classList.remove('flipped');
-        document.querySelector('.memory-card[data-index="'+i2+'"]').classList.remove('flipped');
-        pairsFlipped = []; pairsLocked = false;
-      }, 800);
-    }
+    pairsWrongPair = { [other.side]: other.idx, [side]: idx };
+    renderPairsColumns();
+    setTimeout(()=>{
+      pairsWrongPair = null; pairsSelected = null; pairsLocked = false;
+      renderPairsColumns();
+    }, 700);
   }
 }
 function finishPairs(){
@@ -1834,7 +2066,7 @@ let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editMod
 function openThemeEdit(i){
   editingThemeIndex = (typeof i === 'number') ? i : null;
   const t = editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex] : {
-    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs'], lockedMode:'swipe', items:[]
+    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide'], lockedMode:'swipe', items:[]
   };
   document.getElementById('themeEditTitle').textContent = editingThemeIndex !== null ? 'Modifier le thème' : 'Nouveau thème';
   document.getElementById('themeTitleInput').value = t.title;
@@ -1843,7 +2075,7 @@ function openThemeEdit(i){
   document.getElementById('themeItemsTextarea').value = t.items.map(x=>x.join(' ; ')).join('\n');
   renderThemeClassChips(t.classes || []);
   renderModeModeSegment(t.modeMode || 'choice');
-  renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs']);
+  renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs','guide']);
   renderLockedModeSelect(t.lockedMode || 'swipe');
   document.getElementById('deleteThemeBtn').style.display = editingThemeIndex !== null ? 'block' : 'none';
   showScreen('themeEditScreen');
