@@ -246,6 +246,27 @@
     100%{opacity:0; transform:translate(-50%,-45px);}
   }
 
+  /* ---------- AIDE / RAPPEL DE COURS ---------- */
+  .lesson-help-btn{
+    position:fixed; bottom:18px; right:18px; z-index:40;
+    width:52px; height:52px; border-radius:50%; border:none;
+    background:var(--blue); color:#062230; font-size:22px; cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.4); display:none; align-items:center; justify-content:center;
+  }
+  .lesson-help-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.65); z-index:50;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .lesson-help-box{
+    background:var(--bg2); border:2px solid var(--blue); border-radius:18px;
+    padding:22px; max-width:440px; width:100%; max-height:74vh; overflow-y:auto;
+  }
+  .lesson-help-box h3{font-family:'Bungee',sans-serif; color:var(--blue); font-size:16px; margin:0 0 12px;}
+  .lesson-help-box p{font-size:14px; line-height:1.6; white-space:pre-wrap; color:var(--text);}
+
+  /* ---------- PROGRESSIF ---------- */
+  #progressifScreen{justify-content:flex-start;}
+
   /* ---------- COURS GUIDÉ ---------- */
   #guideScreen{justify-content:flex-start;}
   .guide-input{
@@ -383,11 +404,21 @@
 <body>
 <div id="app">
 
+  <button class="lesson-help-btn" id="lessonHelpBtn" onclick="openLessonHelp()" style="display:none;">💡</button>
+  <div class="lesson-help-overlay" id="lessonHelpOverlay" onclick="if(event.target===this) closeLessonHelp();">
+    <div class="lesson-help-box">
+      <h3 id="lessonHelpTitle">Rappel</h3>
+      <p id="lessonHelpText"></p>
+      <p id="lessonHelpTextEn" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid var(--bg3); color:var(--dim);"></p>
+      <button class="btn primary" style="width:100%; margin-top:16px;" onclick="closeLessonHelp()">Fermer</button>
+    </div>
+  </div>
+
   <!-- CLASS SELECT -->
   <section class="screen active" id="classScreen">
     <div class="logo">CLASS<span>ARENA</span></div>
     <p class="tagline">Choisis ta classe pour commencer</p>
-    <div class="stack" id="classList"></div>
+    <div class="stack" id="classList"><p style="color:var(--dim);font-size:14px;">Chargement…</p></div>
     <div class="menu-footer"><button class="link-btn" onclick="openTeacher()">Espace enseignant</button></div>
   </section>
 
@@ -513,6 +544,27 @@
     <div class="target-word" id="duelBase">go</div>
     <p class="target-sub" id="duelPromptText">Trouve la bonne réponse</p>
     <div class="targets-grid" id="duelTargetsGrid"></div>
+  </section>
+
+  <!-- PROGRESSIF -->
+  <section class="screen" id="progressifScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backFromGame()">←</button>
+      <div class="stat-pill">Question <b id="progressifRoundLabel">1/15</b></div>
+      <div class="stat-pill">Score <b id="progressifScoreLabel">0</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressifProgress" style="width:0%"></div></div>
+    <p class="target-sub" id="progressifPromptText">Trouve la bonne réponse</p>
+    <div class="target-word" id="progressifWord" style="margin-bottom:16px;">mot</div>
+    <div class="targets-grid" id="progressifOptionsGrid"></div>
+    <div id="progressifInputWrap" style="display:none; width:100%;">
+      <input type="text" id="progressifInput" class="guide-input" placeholder="Tape ta réponse ici" autocomplete="off" onkeydown="if(event.key==='Enter') checkProgressifTyped();">
+      <button class="btn primary" style="width:100%;" onclick="checkProgressifTyped()">Valider</button>
+    </div>
+    <div class="guide-feedback" id="progressifFeedback">
+      <div id="progressifFeedbackTitle"></div>
+      <div class="guide-answer" id="progressifFeedbackAnswer"></div>
+    </div>
   </section>
 
   <!-- COURS GUIDÉ -->
@@ -852,8 +904,10 @@ const DEFAULT_CONFIG = {
       prefix: "to ",
       prompt: "Quelle est la bonne forme au prétérit ?",
       distractorStyle: "verb-ed",
+      lessonReminder: "Le prétérit des verbes irréguliers ne suit pas la règle du -ed. Il faut apprendre chaque forme par cœur (ex : go → went, think → thought). Attention : ne jamais ajouter -ed à un verbe irrégulier !",
+      lessonReminderEn: "Irregular verbs don't follow the regular -ed rule for the past tense. You must memorize each form separately (e.g. go → went, think → thought). Be careful: never add -ed to an irregular verb!",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_VERBS
     },
@@ -863,8 +917,10 @@ const DEFAULT_CONFIG = {
       classes: ["1ère MES","1ère MELEC"],
       prefix: "",
       prompt: "Quelle est la traduction ?",
+      lessonReminder: "Pas de règle grammaticale ici : c'est du vocabulaire à retenir (clue, evidence, suspect, alibi, culprit, motive...). Relis la liste de mots si tu bloques.",
+      lessonReminderEn: "No grammar rule here: it's vocabulary to remember (clue, evidence, suspect, alibi, culprit, motive...). Re-read the word list if you're stuck.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_MYSTERY_VOCAB
     },
@@ -874,8 +930,10 @@ const DEFAULT_CONFIG = {
       classes: ["2nde MES"],
       prefix: "",
       prompt: "Quelle est la traduction ?",
+      lessonReminder: "Pas de règle grammaticale ici : c'est du vocabulaire à retenir (logo, brand name, slogan, caption...) plus les connecteurs de comparaison but/however/while/whereas.",
+      lessonReminderEn: "No grammar rule here: it's vocabulary to remember (logo, brand name, slogan, caption...) plus the comparison connectors but/however/while/whereas.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_ART_TO_AD_VOCAB
     },
@@ -885,8 +943,9 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quel est un synonyme plus riche ?",
+      lessonReminder: "Ces mots remplacent des mots simples et souvent répétés (bien, faire, dire, chose, grand...) par des synonymes plus précis et plus riches, utiles à l'écrit comme à l'oral.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_VOCAB_RICHE
     },
@@ -896,8 +955,9 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quelle est la bonne forme conjuguée ?",
+      lessonReminder: "Pour conjuguer : identifier le temps (présent, futur, imparfait, passé composé), puis appliquer les terminaisons selon le sujet (je, tu, il/elle, nous, vous, ils/elles). Les verbes très courants (être, avoir, aller, faire, pouvoir, vouloir, savoir, devoir...) sont irréguliers et doivent être appris par cœur.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_CONJUGAISON
     },
@@ -907,8 +967,9 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quel est le bon mot ?",
+      lessonReminder: "a / à : « a » vient du verbe avoir (il a), « à » est une préposition. est / et : « est » vient du verbe être (il est), « et » relie deux mots. son / sont : « son » est possessif (son livre), « sont » vient du verbe être. ce / se : « ce » devant un nom (ce livre), « se » devant un verbe pronominal (il se lave). c'est / s'est : « c'est » = cela est, « s'est » vient d'un verbe pronominal au passé (il s'est levé).",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_ORTHOGRAPHE
     },
@@ -918,8 +979,10 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quel est le bon modal ?",
+      lessonReminder: "must = obligation forte / mustn't = interdiction. have to = obligation qui vient de l'extérieur (règlement...). don't have to = pas obligé. should = conseil. can/could = capacité ou permission. may = permission polie. might/could = possibilité incertaine.",
+      lessonReminderEn: "must = strong obligation / mustn't = prohibition. have to = obligation from outside (a rule...). don't have to = not obligatory. should = advice. can/could = ability or permission. may = polite permission. might/could = uncertain possibility.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_MODALS
     },
@@ -929,8 +992,10 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quelle est la bonne forme ?",
+      lessonReminder: "Type 1 (réel futur) : If + présent, ... will + verbe. Type 2 (irréel présent) : If + prétérit, ... would + verbe (if I were you...). Type 3 (irréel passé) : If + had + participe passé, ... would have + participe passé.",
+      lessonReminderEn: "Type 1 (real future): If + present, ... will + verb. Type 2 (unreal present): If + past simple, ... would + verb (if I were you...). Type 3 (unreal past): If + had + past participle, ... would have + past participle.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_CONDITIONALS
     },
@@ -940,8 +1005,10 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quel est le bon pronom ?",
+      lessonReminder: "Sujet (fait l'action) : I, you, he, she, it, we, they. Complément (subit l'action) : me, you, him, her, it, us, them. Possessif (devant un nom) : my, your, his, her, its, our, their.",
+      lessonReminderEn: "Subject (does the action): I, you, he, she, it, we, they. Object (receives the action): me, you, him, her, it, us, them. Possessive (before a noun): my, your, his, her, its, our, their.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_PRONOUNS
     },
@@ -951,8 +1018,9 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Quel temps utiliser ?",
+      lessonReminder: "Imparfait : décrit, une habitude, une action qui dure (il pleuvait). Passé composé / passé simple : une action ponctuelle, un événement qui interrompt (soudain, il cria). En général, l'imparfait plante le décor, le passé composé/simple fait avancer l'histoire.",
       modeMode: "choice",
-      modes: ["swipe","shoot","duel","pairs","guide"],
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_TEMPS_NARRATION
     },
@@ -962,6 +1030,7 @@ const DEFAULT_CONFIG = {
       classes: ALL_CLASSES,
       prefix: "",
       prompt: "Corrige la phrase (recopie-la entièrement, correctement).",
+      lessonReminder: "Après « il faut que », « bien que », « vouloir que » → toujours le subjonctif (que j'aille, que tu sois). Le verbe s'accorde toujours avec son sujet. À l'écrit, la négation complète est « ne...pas ». Attention aux verbes qui se conjuguent avec être au passé composé (aller, rester, partir, venir...).",
       modeMode: "locked",
       modes: ["guide"],
       lockedMode: "guide",
@@ -975,7 +1044,8 @@ const MODE_DEFS = {
   shoot:{icon:"◎", cls:"shoot-c", title:"Vise Juste", desc:"Touche la bonne réponse parmi les cibles avant la fin du chrono."},
   duel:{icon:"⚔", cls:"duel-c", title:"Duel", desc:"Chaque bonne réponse inflige des dégâts, chaque erreur laisse l'adversaire riposter."},
   pairs:{icon:"▦", cls:"pairs-c", title:"Relie les Paires", desc:"Touche un terme puis sa bonne réponse pour les associer, en un minimum de coups."},
-  guide:{icon:"📘", cls:"guide-c", title:"Cours guidé", desc:"Tape ta réponse toi-même, avec la correction et une explication à chaque fois. Sans pression de score."}
+  guide:{icon:"📘", cls:"guide-c", title:"Cours guidé", desc:"Tape ta réponse toi-même, avec la correction et une explication à chaque fois. Sans pression de score."},
+  progressif:{icon:"📈", cls:"progressif-c", title:"Progressif", desc:"Ça commence facile (choix multiples), puis ça se complique jusqu'à taper la réponse toi-même."}
 };
 
 /* ---------------- SUPABASE (leaderboard backend) ----------------
@@ -1013,16 +1083,7 @@ async function fetchLeaderboard(classe, mode){
 
 let CONFIG = loadConfig();
 
-function loadConfig(){
-  let saved = null;
-  try{
-    const raw = localStorage.getItem('classarena_config_v2');
-    if(raw){
-      const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.classes) && Array.isArray(parsed.themes)) saved = parsed;
-    }
-  }catch(e){}
-  if(!saved) return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+function mergeWithDefaults(saved){
   if(!saved.rosters) saved.rosters = {};
   DEFAULT_CONFIG.classes.forEach(c=>{ if(!saved.classes.includes(c)) saved.classes.push(c); });
   const savedIds = new Set(saved.themes.map(t=>t.id));
@@ -1033,6 +1094,8 @@ function loadConfig(){
     const def = DEFAULT_CONFIG.themes.find(d=>d.id===t.id);
     if(!def) return;
     if(def.distractorStyle && !t.distractorStyle) t.distractorStyle = def.distractorStyle;
+    if(def.lessonReminder && !t.lessonReminder) t.lessonReminder = def.lessonReminder;
+    if(def.lessonReminderEn && !t.lessonReminderEn) t.lessonReminderEn = def.lessonReminderEn;
     if(!def.modes.every(m=>t.modes.includes(m))){
       def.modes.forEach(m=>{ if(!t.modes.includes(m)) t.modes.push(m); });
     }
@@ -1042,14 +1105,71 @@ function loadConfig(){
   });
   return saved;
 }
-function saveConfig(){ try{ localStorage.setItem('classarena_config_v2', JSON.stringify(CONFIG)); }catch(e){} }
+function loadConfig(){
+  try{
+    const raw = localStorage.getItem('classarena_config_v2');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && Array.isArray(parsed.classes) && Array.isArray(parsed.themes)) return mergeWithDefaults(parsed);
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+}
+function saveConfig(){
+  try{ localStorage.setItem('classarena_config_v2', JSON.stringify(CONFIG)); }catch(e){}
+  pushRemoteConfig();
+}
+async function pushRemoteConfig(){
+  if(!supabaseReady()) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/classarena_config?on_conflict=id`, {
+      method:'POST',
+      headers: sbHeaders({'Content-Type':'application/json', 'Prefer':'resolution=merge-duplicates'}),
+      body: JSON.stringify([{ id:'main', data: CONFIG, updated_at: new Date().toISOString() }])
+    });
+  }catch(e){}
+}
+async function initConfig(){
+  if(supabaseReady()){
+    try{
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/classarena_config?id=eq.main&select=data`, {headers: sbHeaders()});
+      if(res.ok){
+        const rows = await res.json();
+        if(rows[0] && rows[0].data && Array.isArray(rows[0].data.classes) && Array.isArray(rows[0].data.themes)){
+          CONFIG = mergeWithDefaults(rows[0].data);
+          try{ localStorage.setItem('classarena_config_v2', JSON.stringify(CONFIG)); }catch(e){}
+        } else {
+          await pushRemoteConfig();
+        }
+      }
+    }catch(e){}
+  }
+  renderClassList();
+}
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null ? '' : s; return d.innerHTML; }
 
 /* ---------------- NAVIGATION ---------------- */
+const GAME_SCREENS = ['swipeScreen','shootScreen','duelScreen','pairsScreen','guideScreen','progressifScreen'];
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  const helpBtn = document.getElementById('lessonHelpBtn');
+  if(helpBtn) helpBtn.style.display = GAME_SCREENS.includes(id) ? 'flex' : 'none';
 }
+function openLessonHelp(){
+  if(!selectedTheme) return;
+  document.getElementById('lessonHelpTitle').textContent = selectedTheme.title;
+  document.getElementById('lessonHelpText').textContent = selectedTheme.lessonReminder || "Pas de rappel disponible pour ce thème.";
+  const enEl = document.getElementById('lessonHelpTextEn');
+  if(selectedTheme.lessonReminderEn){
+    enEl.textContent = 'In English: ' + selectedTheme.lessonReminderEn;
+    enEl.style.display = 'block';
+  } else {
+    enEl.style.display = 'none';
+  }
+  document.getElementById('lessonHelpOverlay').style.display = 'flex';
+}
+function closeLessonHelp(){ document.getElementById('lessonHelpOverlay').style.display = 'none'; }
 function goClassScreen(){ renderClassList(); showScreen('classScreen'); }
 function backToPlayerScreen(){ renderPlayerList(); showScreen('playerScreen'); }
 function backToThemeScreen(){ renderThemeList(); showScreen('themeScreen'); }
@@ -1158,6 +1278,7 @@ function launchGame(mode){
   else if(mode === 'duel') openDuelSetup();
   else if(mode === 'pairs') startPairs();
   else if(mode === 'guide') startGuide();
+  else if(mode === 'progressif') startProgressif();
 }
 
 /* ---------------- SHARED HELPERS ---------------- */
@@ -1706,6 +1827,91 @@ function handleDuelAbandon(){
 }
 
 /* =========================================================
+   PROGRESSIF
+   ========================================================= */
+let progressifRounds = [], progressifIndex = 0, progressifScore = 0, progressifMissed = [], progressifAnswered = false;
+const PROGRESSIF_TOTAL = 15;
+
+function startProgressif(){
+  progressifRounds = pickRounds(PROGRESSIF_TOTAL);
+  progressifIndex = 0; progressifScore = 0; progressifMissed = [];
+  document.getElementById('progressifScoreLabel').textContent = 0;
+  document.getElementById('progressifPromptText').textContent = PROMPT;
+  showScreen('progressifScreen');
+  renderProgressifRound();
+}
+function getProgressifOptionCount(idx){
+  if(idx < 5) return 4;
+  if(idx < 10) return 2;
+  return 0;
+}
+function renderProgressifRound(){
+  if(progressifIndex >= progressifRounds.length){ finishProgressif(); return; }
+  progressifAnswered = false;
+  document.getElementById('progressifRoundLabel').textContent = (progressifIndex+1)+'/'+progressifRounds.length;
+  document.getElementById('progressifProgress').style.width = (progressifIndex/progressifRounds.length*100)+'%';
+  document.getElementById('progressifFeedback').style.display = 'none';
+  const v = progressifRounds[progressifIndex];
+  document.getElementById('progressifWord').textContent = PREFIX + v[0];
+
+  const n = getProgressifOptionCount(progressifIndex);
+  const grid = document.getElementById('progressifOptionsGrid');
+  const inputWrap = document.getElementById('progressifInputWrap');
+  if(n > 0){
+    grid.style.display = 'grid'; inputWrap.style.display = 'none';
+    grid.innerHTML = '';
+    const distractors = getDistractors(v[0], v[1], n-1);
+    const options = shuffle([v[1], ...distractors]);
+    options.forEach(opt=>{
+      const btn = document.createElement('button');
+      btn.className = 'target-btn';
+      btn.textContent = opt;
+      btn.onclick = ()=> resolveProgressifChoice(opt===v[1], v, btn);
+      grid.appendChild(btn);
+    });
+  } else {
+    grid.style.display = 'none'; inputWrap.style.display = 'block';
+    const input = document.getElementById('progressifInput');
+    input.value = ''; input.disabled = false;
+    setTimeout(()=> input.focus(), 50);
+  }
+}
+function resolveProgressifChoice(correct, v, btn){
+  if(progressifAnswered) return;
+  progressifAnswered = true;
+  document.querySelectorAll('#progressifOptionsGrid .target-btn').forEach(b=>b.onclick=null);
+  if(correct) btn.classList.add('correct');
+  else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('#progressifOptionsGrid .target-btn').forEach(b=>{ if(b.textContent===v[1]) b.classList.add('correct'); });
+  }
+  applyProgressifResult(correct, v);
+}
+function checkProgressifTyped(){
+  if(progressifAnswered) return;
+  progressifAnswered = true;
+  const v = progressifRounds[progressifIndex];
+  const input = document.getElementById('progressifInput');
+  const correct = normalizeAnswer(input.value) === normalizeAnswer(v[1]);
+  input.disabled = true;
+  applyProgressifResult(correct, v);
+}
+function applyProgressifResult(correct, v){
+  if(correct){ progressifScore++; document.getElementById('progressifScoreLabel').textContent = progressifScore; }
+  else { progressifMissed.push({base:v[0], answer:v[1]}); }
+  const fb = document.getElementById('progressifFeedback');
+  fb.style.display = 'block';
+  fb.className = 'guide-feedback ' + (correct ? 'ok' : 'bad');
+  document.getElementById('progressifFeedbackTitle').textContent = correct ? '✓ Correct !' : '✗ Pas tout à fait.';
+  document.getElementById('progressifFeedbackAnswer').textContent = correct ? '' : 'Réponse : ' + v[1];
+  setTimeout(()=>{ progressifIndex++; renderProgressifRound(); }, correct ? 500 : 1100);
+}
+function finishProgressif(){
+  submitScore('progressif', progressifScore);
+  showResults('ENTRAÎNEMENT TERMINÉ', progressifScore, progressifRounds.length, progressifMissed);
+}
+
+/* =========================================================
    COURS GUIDÉ
    ========================================================= */
 let guideRounds = [], guideIndex = 0, guideScore = 0, guideMissed = [], guideAnswered = false;
@@ -2066,7 +2272,7 @@ let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editMod
 function openThemeEdit(i){
   editingThemeIndex = (typeof i === 'number') ? i : null;
   const t = editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex] : {
-    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide'], lockedMode:'swipe', items:[]
+    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide','progressif'], lockedMode:'swipe', items:[]
   };
   document.getElementById('themeEditTitle').textContent = editingThemeIndex !== null ? 'Modifier le thème' : 'Nouveau thème';
   document.getElementById('themeTitleInput').value = t.title;
@@ -2075,7 +2281,7 @@ function openThemeEdit(i){
   document.getElementById('themeItemsTextarea').value = t.items.map(x=>x.join(' ; ')).join('\n');
   renderThemeClassChips(t.classes || []);
   renderModeModeSegment(t.modeMode || 'choice');
-  renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs','guide']);
+  renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs','guide','progressif']);
   renderLockedModeSelect(t.lockedMode || 'swipe');
   document.getElementById('deleteThemeBtn').style.display = editingThemeIndex !== null ? 'block' : 'none';
   showScreen('themeEditScreen');
@@ -2166,7 +2372,7 @@ function deleteTheme(){
   showScreen('teacherScreen');
 }
 
-renderClassList();
+initConfig();
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
