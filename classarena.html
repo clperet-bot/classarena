@@ -738,7 +738,8 @@ const DEFAULT_MYSTERY_VOCAB = [
 ["fingerprint","empreinte digitale",""],["handwriting","écriture",""],["security camera","caméra de sécurité",""],
 ["footage","images vidéo",""],["to accuse","accuser",""],["accusation","accusation",""],
 ["to lie","mentir",""],["a lie","un mensonge",""],["to confess","avouer",""],["locker","casier",""],
-["timeline","chronologie",""],["to interrogate","interroger",""],["statement","déclaration",""]
+["timeline","chronologie",""],["to interrogate","interroger",""],["statement","déclaration",""],
+["red herring","fausse piste",""]
 ];
 
 const DEFAULT_ART_TO_AD_VOCAB = [
@@ -829,6 +830,23 @@ const DEFAULT_SYNTAXE = [
 ["On a été au cinéma hier.","On est allé au cinéma hier.","Encore le verbe aller au passé composé : on est allé, pas on a été."],
 ["Je voudrais que tu viens.","Je voudrais que tu viennes.","Après « vouloir que », subjonctif : que tu viennes."],
 ["Bien qu'il est fatigué, il continue.","Bien qu'il soit fatigué, il continue.","« Bien que » est toujours suivi du subjonctif : qu'il soit."]
+];
+
+const DEFAULT_POSSESSIVE_S = [
+["Le casier de Jason","Jason's locker",""],
+["Le vernis à ongles de Sophia","Sophia's nail polish",""],
+["Le message de Sophia","Sophia's note",""],
+["La guitare de Daniel","Daniel's guitar",""],
+["Le téléphone de Michael","Michael's phone",""],
+["Le bureau du professeur","the teacher's office",""],
+["Les casiers des élèves","the students' lockers",""],
+["Les sacs des filles","the girls' bags",""],
+["La voiture de mes parents","my parents' car",""],
+["Le nom de l'école","the school's name",""],
+["L'alibi de Sophia","Sophia's alibi",""],
+["L'emploi du temps de Jason","Jason's schedule",""],
+["La caméra de sécurité de l'école","the school's security camera",""],
+["Le mobile du coupable","the culprit's motive",""]
 ];
 
 const DEFAULT_PRONOUNS = [
@@ -1035,6 +1053,19 @@ const DEFAULT_CONFIG = {
       modes: ["guide"],
       lockedMode: "guide",
       items: DEFAULT_SYNTAXE
+    },
+    {
+      id: "possessive-s",
+      title: "La possession avec 's (Cluedo)",
+      classes: ["1ère MES","1ère MELEC"],
+      prefix: "",
+      prompt: "Comment dit-on ça avec 's ?",
+      lessonReminder: "Pour un possesseur singulier (une personne) : nom + 's (Jason's locker). Pour un pluriel régulier (qui finit déjà par s) : nom + ' seulement (the students' lockers, the girls' bags). On utilise 's pour les personnes et souvent pour les lieux/organisations (the school's name) ; pour un objet inanimé, 'of' est aussi courant (the color of the door).",
+      lessonReminderEn: "For one owner (a person): noun + 's (Jason's locker). For a regular plural (already ending in s): noun + ' only (the students' lockers, the girls' bags). Used for people and often for places/organisations (the school's name) — for a plain object, 'of' is also common (the color of the door).",
+      modeMode: "choice",
+      modes: ["swipe","shoot","duel","pairs","guide","progressif"],
+      lockedMode: "swipe",
+      items: DEFAULT_POSSESSIVE_S
     }
   ]
 };
