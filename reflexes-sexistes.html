@@ -102,32 +102,31 @@
   .end-screen{justify-content:center; align-items:center;}
   .end-screen .btn{max-width:340px;}
 
-  /* ---------- CONTRE-DISCOURS ---------- */
-  .cd-box{width:100%; background:var(--bg2); border-radius:18px; padding:16px; margin-bottom:14px; flex:none;}
+  /* ---------- CONTRE-DISCOURS (intro) ---------- */
+  .cd-box{width:100%; background:var(--bg2); border-radius:18px; padding:18px; margin-bottom:14px; flex:none;}
   .cd-label{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--dim); font-weight:700; margin-bottom:8px;}
-  .cd-media{width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000; margin-bottom:10px; border:none;}
-  .cd-note{font-size:12.5px; color:var(--dim); line-height:1.5;}
-  .cd-note b{color:var(--text);}
+  .cd-note{font-size:13.5px; color:var(--text); line-height:1.6;}
+  .cd-note b{color:var(--lime);}
 
-  .match-row{display:flex; flex-direction:column; gap:10px; width:100%; margin:10px 0;}
-  .match-card{background:var(--bg3); border:2px solid transparent; border-radius:14px; padding:13px 14px;
-    font-size:13.5px; line-height:1.4; cursor:pointer; text-align:left;}
-  .match-card.myth{border-left:4px solid var(--coral);}
-  .match-card.reb{border-left:4px solid var(--blue);}
-  .match-card.selected{border-color:var(--amber);}
-  .match-card.solved{border-color:var(--lime); opacity:.55; cursor:default;}
-  .match-card.shake{animation:shake .3s;}
-  @keyframes shake{25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}}
-
-  .vf-card{background:var(--bg2); border-radius:16px; padding:18px; width:100%; margin-bottom:12px; flex:none;}
-  .vf-q{font-size:14.5px; line-height:1.5; margin-bottom:12px;}
-  .vf-choices{display:flex; gap:10px;}
-  .vf-choices button{flex:1; padding:12px; border-radius:12px; border:none; font-family:inherit; font-weight:700;
-    font-size:14px; cursor:pointer; background:var(--bg3); color:var(--text);}
-  .vf-choices button.picked-ok{background:var(--lime); color:#0f2400;}
-  .vf-choices button.picked-bad{background:var(--coral); color:#2a0810;}
-  .vf-fb{font-size:12.5px; color:var(--dim); margin-top:8px; line-height:1.4; display:none;}
-  .vf-fb.show{display:block;}
+  /* ---------- CITATIONS (idée reçue + 3 propositions) ---------- */
+  #citeScreen{justify-content:center;}
+  .cite-wrap{width:100%; max-width:360px; flex:none; display:flex; flex-direction:column; align-items:center;}
+  .cite-card{background:var(--bg2); border-radius:22px; padding:24px 20px; width:100%; flex:none;
+    box-shadow:0 10px 30px rgba(0,0,0,.3); border:2px solid var(--bg3);}
+  .cite-eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--coral); font-weight:700; margin-bottom:10px;}
+  .cite-mark{font-family:'Bungee',sans-serif; font-size:30px; color:var(--coral); line-height:.6; margin-bottom:4px;}
+  .cite-text{font-size:16px; line-height:1.5; font-style:italic; margin-bottom:6px;}
+  .cite-q{font-size:12.5px; color:var(--dim); margin-top:14px; margin-bottom:10px; font-weight:700;}
+  .cite-choices{display:flex; flex-direction:column; gap:9px;}
+  .cite-choice{background:var(--bg3); border:2px solid transparent; border-radius:13px; padding:12px 14px;
+    font-family:inherit; font-size:13.5px; line-height:1.4; text-align:left; color:var(--text); cursor:pointer;}
+  .cite-choice.correct{background:var(--lime); color:#0f2400; border-color:var(--lime); font-weight:700;}
+  .cite-choice.wrong{background:var(--coral); color:#2a0810; border-color:var(--coral);}
+  .cite-choice.dim{opacity:.45;}
+  .cite-fb{font-size:13px; color:var(--dim); line-height:1.5; margin-top:14px; display:none;}
+  .cite-fb.show{display:block;}
+  .cite-fb b{color:var(--text);}
+  .cite-next{margin-top:16px;}
 
   #resultsScreen .bar-row{width:100%; margin-bottom:14px;}
   #resultsScreen .bar-label{font-size:12.5px; margin-bottom:5px; color:var(--text);}
@@ -208,7 +207,7 @@
     <button class="btn primary" onclick="showScreen('mgScreen')">Retour au parcours</button>
   </section>
 
-  <!-- ===================== CONTRE-DISCOURS ===================== -->
+  <!-- ===================== CONTRE-DISCOURS (intro) ===================== -->
   <section class="screen" id="cdScreen">
     <div class="topbar">
       <button class="icon-btn" onclick="showScreen('mgScreen')">←</button>
@@ -216,59 +215,21 @@
     </div>
     <div class="page-title" style="margin-bottom:14px;">Contre-discours</div>
     <div class="stack">
-
       <div class="cd-box">
-        <div class="cd-label">À regarder — partie 1/2 (1:30)</div>
-        <iframe class="cd-media" id="cdVideoFrame1" src="" title="Vidéo France 24 — partie 1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-        <p class="cd-note"><b>France 24 — Info ou Intox</b>, « Violences faites aux femmes : la propagande masculiniste débunkée ». Extrait 1, 0:00 à 1:30.</p>
+        <div class="cd-label">Le principe</div>
+        <p class="cd-note">On entend souvent des idées reçues sur « la crise des hommes ». <b>7 citations</b>, une par une. À chaque fois : 3 propositions, une seule est la bonne réponse.</p>
       </div>
-
-      <div class="cd-box" id="cdVideo2Box" style="display:none;">
-        <div class="cd-label">À regarder — partie 2/2 (1:30)</div>
-        <iframe class="cd-media" id="cdVideoFrame2" src="" title="Vidéo France 24 — partie 2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-        <p class="cd-note">Extrait 2, 1:30 à 3:00.</p>
-        <button class="btn blue" onclick="startMatch()">Faire l'activité</button>
-      </div>
-      <button class="btn ghost" id="cdVideo2Reveal" onclick="revealVideo2()">Voir la partie 2</button>
-
-      <div class="cd-box" id="podcastBox" style="display:none;">
-        <div class="cd-label">À écouter (3 min max)</div>
-        <iframe class="cd-media" style="aspect-ratio:auto; height:152px;" src="https://open.spotify.com/embed/episode/24vZPcysGmhuDbuSFLya5r?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-        <p class="cd-note"><b>Les couilles sur la table</b>, « Contre la rhétorique masculiniste », avec le politologue Francis Dupuis-Déri. ⏱ N'écoute que les 3 premières minutes (le lecteur affiche l'épisode entier, mais tu t'arrêtes à 3:00).</p>
-        <button class="btn blue" onclick="startVF()">Faire l'activité</button>
-      </div>
-
+      <button class="btn blue" onclick="startCitations()">Commencer</button>
     </div>
   </section>
 
-  <!-- ===================== ACTIVITÉ JEU — ASSOCIATION ===================== -->
-  <section class="screen" id="matchScreen">
+  <!-- ===================== CITATIONS — idée reçue + 3 propositions ===================== -->
+  <section class="screen" id="citeScreen">
     <div class="topbar">
       <button class="icon-btn" onclick="showScreen('cdScreen')">←</button>
-      <div class="stat-pill">Trouvées <b id="matchScoreLabel">0/4</b></div>
+      <div class="stat-pill">Citation <b id="citeIndexLabel">1/7</b></div>
     </div>
-    <p class="page-title" style="font-size:16px;">Relie chaque idée reçue à sa réfutation</p>
-    <p class="target-sub">Touche une carte à gauche, puis sa réponse à droite.</p>
-    <div class="stack">
-      <div class="match-row" id="matchZone"></div>
-    </div>
-    <div id="matchDoneBox" style="display:none; width:100%; flex:none;">
-      <button class="btn primary" onclick="finishMatch()">Continuer</button>
-    </div>
-  </section>
-
-  <!-- ===================== ACTIVITÉ JEU — VRAI/FAUX ===================== -->
-  <section class="screen" id="vfScreen">
-    <div class="topbar">
-      <button class="icon-btn" onclick="showScreen('cdScreen')">←</button>
-      <div class="stat-pill">Score <b id="vfScoreLabel">0/3</b></div>
-    </div>
-    <p class="page-title" style="font-size:16px;">Vrai ou faux ?</p>
-    <p class="target-sub">D'après ce que dit Francis Dupuis-Déri dans l'extrait.</p>
-    <div class="stack" id="vfBox"></div>
-    <div id="vfDoneBox" style="display:none; width:100%; flex:none;">
-      <button class="btn primary" onclick="finishVF()">Terminer</button>
-    </div>
+    <div class="cite-wrap" id="citeWrap"></div>
   </section>
 
   <!-- ===================== FIN CONTRE-DISCOURS ===================== -->
@@ -400,130 +361,111 @@ function triDecision(reponse){
 /* ================= CONTRE-DISCOURS ================= */
 function startContreDiscours(){
   showScreen('cdScreen');
-  document.getElementById('cdVideo2Box').style.display = 'none';
-  document.getElementById('cdVideo2Reveal').style.display = 'block';
-  document.getElementById('podcastBox').style.display = 'none';
-  document.getElementById('cdVideoFrame1').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=0&end=90&rel=0';
-  document.getElementById('cdVideoFrame2').src = '';
-}
-function revealVideo2(){
-  document.getElementById('cdVideoFrame2').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=90&end=180&rel=0';
-  document.getElementById('cdVideo2Box').style.display = 'block';
-  document.getElementById('cdVideo2Reveal').style.display = 'none';
 }
 
-const MATCH_PAIRS = [
-  { myth:"Les hommes seraient « en crise » à cause du féminisme.",
-    reb:"Les inégalités mesurées (salaires, postes de pouvoir, temps domestique) restent en moyenne favorables aux hommes." },
-  { myth:"Les violences conjugales toucheraient autant les hommes que les femmes.",
-    reb:"Les femmes représentent la grande majorité des victimes de violences conjugales graves et des féminicides." },
-  { myth:"Le décrochage scolaire des garçons prouverait une discrimination anti-garçons.",
-    reb:"Les écarts scolaires ont des causes sociales et économiques complexes, pas une politique hostile aux garçons." },
-  { myth:"Les pères n'obtiendraient presque jamais la garde de leurs enfants.",
-    reb:"Quand un père demande la garde (alternée ou exclusive), elle lui est accordée dans la grande majorité des cas." }
+/* Idée reçue + 3 propositions (une seule bonne réponse). Contenu vérifié :
+   argumentaire "propagande masculiniste" (France 24, Info ou Intox) et
+   analyse du politologue Francis Dupuis-Déri (violences conjugales, garde
+   d'enfants, décrochage scolaire, origine du discours de "crise de la masculinité"). */
+const CITATIONS = [
+  { cite:"« Les hommes seraient aujourd'hui la vraie victime du féminisme, en pleine crise. »",
+    choices:[
+      "C'est vrai : les chiffres montrent que les hommes sont désormais désavantagés.",
+      "C'est un discours exagéré : les inégalités mesurées (salaires, postes de pouvoir, temps domestique) restent en moyenne favorables aux hommes.",
+      "C'est un débat tranché depuis longtemps, sans aucune controverse."
+    ], correct:1,
+    fb:"Les statistiques disponibles (écarts de salaires, accès aux postes de direction, répartition des tâches domestiques) montrent des inégalités qui restent, en moyenne, favorables aux hommes." },
+  { cite:"« Les violences conjugales toucheraient les hommes presque autant que les femmes. »",
+    choices:[
+      "Vrai : hommes et femmes sont visés à parts égales.",
+      "Les statistiques n'existent pas sur ce sujet.",
+      "Faux : les femmes représentent la grande majorité des victimes de violences conjugales graves et des féminicides."
+    ], correct:2,
+    fb:"Les données officielles (ministère de l'Intérieur, études de victimation) montrent que les femmes sont très majoritairement les victimes des violences conjugales les plus graves et des féminicides." },
+  { cite:"« Le décrochage scolaire des garçons prouve qu'il existe une politique hostile aux garçons à l'école. »",
+    choices:[
+      "Vrai, c'est officiellement reconnu comme une politique anti-garçons.",
+      "Les écarts scolaires ont des causes sociales et économiques complexes, pas une politique hostile aux garçons.",
+      "Ce phénomène n'existe pas, c'est une invention."
+    ], correct:1,
+    fb:"Les écarts de réussite scolaire s'expliquent par des facteurs sociaux et économiques croisés (milieu, orientation, rapport à l'école), pas par une politique qui viserait les garçons." },
+  { cite:"« Après une séparation, les pères n'obtiennent presque jamais la garde de leurs enfants. »",
+    choices:[
+      "Vrai, la garde va presque systématiquement à la mère.",
+      "Quand un père demande la garde (alternée ou exclusive), elle lui est accordée dans la grande majorité des cas.",
+      "La justice ne prend jamais en compte la demande des pères."
+    ], correct:1,
+    fb:"Quand un père fait une demande de garde (résidence alternée ou exclusive), elle lui est accordée dans la grande majorité des cas — ce qui est rarement demandé, car peu de pères la réclament, pas parce qu'elle leur serait refusée." },
+  { cite:"Francis Dupuis-Déri, politologue, analyse le discours de « crise de la masculinité ».",
+    choices:[
+      "Pour lui, c'est un fait scientifique établi, mesuré par des études.",
+      "Pour lui, c'est un récit idéologique à interroger, pas un fait scientifique.",
+      "Pour lui, ce discours n'existe pas dans le débat public."
+    ], correct:1,
+    fb:"Dupuis-Déri présente la « crise de la masculinité » comme un récit construit et diffusé politiquement, qu'il faut analyser — pas comme un fait scientifique établi." },
+  { cite:"Dupuis-Déri étudie d'où vient ce discours de « crise de la masculinité ».",
+    choices:[
+      "Il montre des liens avec des mouvements masculinistes et d'extrême droite.",
+      "Il montre que ce discours vient uniquement de chercheurs universitaires neutres.",
+      "Il montre que ce discours n'a aucune origine politique."
+    ], correct:0,
+    fb:"Un des points centraux de son analyse est le lien entre ce discours et des mouvements masculinistes, parfois proches de l'extrême droite." },
+  { cite:"Dupuis-Déri parle aussi des difficultés réelles que certains hommes traversent.",
+    choices:[
+      "Il nie complètement toute difficulté vécue par les hommes.",
+      "Il pense que ces difficultés sont uniquement dues au féminisme.",
+      "Il reconnaît des difficultés bien réelles, mais critique la façon dont elles sont récupérées politiquement."
+    ], correct:2,
+    fb:"Il ne nie pas que des hommes traversent de vraies difficultés — il critique la manière dont ce discours est ensuite instrumentalisé politiquement." }
 ];
-let matchSelected = null, matchSolved = 0;
-function startMatch(){
-  showScreen('matchScreen');
-  document.getElementById('matchDoneBox').style.display = 'none';
-  matchSolved = 0; matchSelected = null;
-  document.getElementById('matchScoreLabel').textContent = '0/'+MATCH_PAIRS.length;
-  const zone = document.getElementById('matchZone');
-  zone.innerHTML = '';
-  const myths = MATCH_PAIRS.map((p,i)=>({...p, i, kind:'myth'}));
-  const rebs = shuffle(MATCH_PAIRS.map((p,i)=>({...p, i, kind:'reb'})));
-  shuffle(myths).forEach(m=>{
-    const el = document.createElement('div');
-    el.className = 'match-card myth'; el.dataset.i = m.i; el.dataset.kind = 'myth';
-    el.textContent = m.myth;
-    el.onclick = ()=>pickMatch(el);
-    zone.appendChild(el);
-  });
-  rebs.forEach(r=>{
-    const el = document.createElement('div');
-    el.className = 'match-card reb'; el.dataset.i = r.i; el.dataset.kind = 'reb';
-    el.textContent = r.reb;
-    el.onclick = ()=>pickMatch(el);
-    zone.appendChild(el);
-  });
+let citeIndex = 0;
+function startCitations(){
+  citeIndex = 0;
+  showScreen('citeScreen');
+  renderCite();
 }
-function pickMatch(el){
-  if(el.classList.contains('solved')) return;
-  if(!matchSelected){
-    matchSelected = el;
-    el.classList.add('selected');
-    return;
-  }
-  if(matchSelected === el){ matchSelected.classList.remove('selected'); matchSelected = null; return; }
-  if(matchSelected.dataset.kind === el.dataset.kind){
-    matchSelected.classList.remove('selected');
-    matchSelected = el; el.classList.add('selected');
-    return;
-  }
-  if(matchSelected.dataset.i === el.dataset.i){
-    matchSelected.classList.remove('selected'); matchSelected.classList.add('solved');
-    el.classList.add('solved');
-    matchSelected = null; matchSolved++;
-    document.getElementById('matchScoreLabel').textContent = matchSolved+'/'+MATCH_PAIRS.length;
-    if(matchSolved === MATCH_PAIRS.length){
-      document.getElementById('matchDoneBox').style.display = 'block';
-    }
-  } else {
-    [matchSelected, el].forEach(c=>{ c.classList.add('shake'); setTimeout(()=>c.classList.remove('shake'),300); });
-    matchSelected.classList.remove('selected');
-    matchSelected = null;
-  }
-}
-function finishMatch(){
-  showScreen('cdScreen');
-  document.getElementById('podcastBox').style.display = 'block';
-}
-
-const VF_ITEMS = [
-  { q:"D'après Francis Dupuis-Déri, la « crise de la masculinité » est un fait scientifique établi.", a:false,
-    fb:"Faux — il la présente comme un récit idéologique à questionner, pas un fait scientifique." },
-  { q:"Il relie ce discours à des mouvements d'extrême droite.", a:true,
-    fb:"Vrai — c'est un des points centraux de son analyse." },
-  { q:"Selon lui, les hommes ne rencontrent aucune difficulté dans la société actuelle.", a:false,
-    fb:"Faux — il ne nie pas les difficultés, il critique la façon dont elles sont récupérées politiquement." }
-];
-let vfScore = 0, vfAnswered = 0;
-function startVF(){
-  showScreen('vfScreen');
-  vfScore = 0; vfAnswered = 0;
-  document.getElementById('vfDoneBox').style.display = 'none';
-  document.getElementById('vfScoreLabel').textContent = '0/'+VF_ITEMS.length;
-  const box = document.getElementById('vfBox');
-  box.innerHTML = '';
-  VF_ITEMS.forEach((item,i)=>{
-    const card = document.createElement('div');
-    card.className = 'vf-card';
-    card.innerHTML = `
-      <div class="vf-q">${escapeHtml(item.q)}</div>
-      <div class="vf-choices">
-        <button onclick="answerVF(this,${i},true)">Vrai</button>
-        <button onclick="answerVF(this,${i},false)">Faux</button>
-      </div>
-      <div class="vf-fb" id="vfFb${i}">${escapeHtml(item.fb)}</div>
-    `;
-    box.appendChild(card);
+function renderCite(){
+  document.getElementById('citeIndexLabel').textContent = (citeIndex+1)+'/'+CITATIONS.length;
+  const item = CITATIONS[citeIndex];
+  const wrap = document.getElementById('citeWrap');
+  wrap.innerHTML = `
+    <div class="cite-card">
+      <div class="cite-eyebrow">On entend souvent</div>
+      <div class="cite-mark">"</div>
+      <div class="cite-text">${escapeHtml(item.cite)}</div>
+      <div class="cite-q">Qu'en est-il vraiment ? Choisis la bonne réponse.</div>
+      <div class="cite-choices" id="citeChoices"></div>
+      <div class="cite-fb" id="citeFb">${escapeHtml(item.fb)}</div>
+      <button class="btn primary cite-next" id="citeNextBtn" style="display:none;" onclick="nextCite()">
+        ${citeIndex === CITATIONS.length-1 ? 'Terminer' : 'Suivant'}
+      </button>
+    </div>
+  `;
+  const box = document.getElementById('citeChoices');
+  item.choices.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className = 'cite-choice';
+    b.textContent = c;
+    b.onclick = ()=>pickCite(i);
+    box.appendChild(b);
   });
 }
-function answerVF(btn, i, userSaysTrue){
-  const item = VF_ITEMS[i];
-  const buttons = btn.parentElement.querySelectorAll('button');
-  buttons.forEach(b=>b.disabled = true);
-  btn.classList.add(userSaysTrue === item.a ? 'picked-ok' : 'picked-bad');
-  document.getElementById('vfFb'+i).classList.add('show');
-  if(userSaysTrue === item.a) vfScore++;
-  vfAnswered++;
-  document.getElementById('vfScoreLabel').textContent = vfScore+'/'+VF_ITEMS.length;
-  if(vfAnswered === VF_ITEMS.length){
-    document.getElementById('vfDoneBox').style.display = 'block';
-  }
+function pickCite(i){
+  const item = CITATIONS[citeIndex];
+  const buttons = document.querySelectorAll('#citeChoices .cite-choice');
+  buttons.forEach((b,idx)=>{
+    b.onclick = null;
+    if(idx === item.correct) b.classList.add('correct');
+    else if(idx === i) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  document.getElementById('citeFb').classList.add('show');
+  document.getElementById('citeNextBtn').style.display = 'block';
 }
-function finishVF(){
-  showScreen('cdEndScreen');
+function nextCite(){
+  citeIndex++;
+  if(citeIndex >= CITATIONS.length){ showScreen('cdEndScreen'); return; }
+  renderCite();
 }
 
 /* ================= RÉSULTATS (accès via #resultats) ================= */
