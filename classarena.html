@@ -659,8 +659,6 @@
       <p class="section-title">Thèmes</p>
       <div id="teacherThemeList"></div>
       <button class="btn primary" style="margin-top:6px;" onclick="openThemeEdit()">+ Nouveau thème</button>
-      <p class="section-title" style="margin-top:18px;">Parcours</p>
-      <button class="btn ghost" style="width:100%;" onclick="location.href='reflexes-sexistes.html#resultats'">📊 Résultats — Mauvais genre</button>
     </div>
   </section>
 
@@ -1114,6 +1112,13 @@ async function fetchLeaderboard(classe, mode){
   }catch(e){ return null; }
 }
 
+// Parcours numériques hors moteur de quiz (vidéos, swipe spécifique, etc.) —
+// ils apparaissent dans la liste des thèmes comme les autres, mais ouvrent
+// une page à part au lieu de lancer un mode de jeu classique.
+const EXTERNAL_THEMES = [
+  { title: "Mauvais genre", badge: "Parcours", classes: ["2nde TNE"], external: true, url: "reflexes-sexistes.html" }
+];
+
 let CONFIG = loadConfig();
 
 function mergeWithDefaults(saved){
@@ -1267,10 +1272,18 @@ function renderThemeList(){
   const wrap = document.getElementById('themeList');
   wrap.innerHTML = '';
   const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass));
-  if(list.length === 0){
+  const externals = EXTERNAL_THEMES.filter(t=> t.classes.includes(selectedClass));
+  if(list.length === 0 && externals.length === 0){
     wrap.innerHTML = '<p style="color:var(--dim);font-size:14px;">Aucun thème pour cette classe pour l\'instant.</p>';
     return;
   }
+  externals.forEach(t=>{
+    const card = document.createElement('div');
+    card.className = 'theme-card';
+    card.innerHTML = `<h3>${escapeHtml(t.title)}</h3><p>${escapeHtml(t.badge || 'Parcours')}</p>`;
+    card.onclick = ()=> { location.href = t.url; };
+    wrap.appendChild(card);
+  });
   list.forEach(t=>{
     const card = document.createElement('div');
     card.className = 'theme-card';
