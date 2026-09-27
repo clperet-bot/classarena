@@ -1160,6 +1160,7 @@ function mergeWithDefaults(saved){
   saved.themes.forEach(t=>{
     const def = DEFAULT_CONFIG.themes.find(d=>d.id===t.id);
     if(!def) return;
+    if(def.matiere && !t.matiere) t.matiere = def.matiere;
     if(def.distractorStyle && !t.distractorStyle) t.distractorStyle = def.distractorStyle;
     if(def.lessonReminder && !t.lessonReminder) t.lessonReminder = def.lessonReminder;
     if(def.lessonReminderEn && !t.lessonReminderEn) t.lessonReminderEn = def.lessonReminderEn;
