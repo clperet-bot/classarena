@@ -24,7 +24,7 @@
   html,body{margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
     font-family:'Space Grotesk', system-ui, sans-serif; overflow:hidden;}
   #app{position:relative; width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column;
-    align-items:center; padding:20px 16px 24px; max-width:520px; margin:0 auto;}
+    align-items:center; padding:20px 16px calc(24px + env(safe-area-inset-bottom, 0px)); max-width:520px; margin:0 auto;}
   .screen{display:none; flex-direction:column; align-items:center; width:100%; height:100%;
     animation:fade .25s ease; overflow-y:auto; overflow-x:hidden;}
   .screen.active{display:flex;}
@@ -99,6 +99,8 @@
   .end-icon{font-size:44px; margin-bottom:6px;}
   .end-title{font-family:'Bungee',sans-serif; font-size:20px; text-align:center; margin-bottom:8px;}
   .end-text{color:var(--dim); font-size:14px; text-align:center; margin-bottom:22px; line-height:1.5; max-width:340px;}
+  .end-screen{justify-content:center; align-items:center;}
+  .end-screen .btn{max-width:340px;}
 
   /* ---------- CONTRE-DISCOURS ---------- */
   .cd-box{width:100%; background:var(--bg2); border-radius:18px; padding:16px; margin-bottom:14px; flex:none;}
@@ -199,12 +201,10 @@
   </section>
 
   <!-- ===================== FIN TRI ===================== -->
-  <section class="screen" id="triEndScreen">
-    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-      <div class="end-icon">✓</div>
-      <div class="end-title">C'est enregistré</div>
-      <p class="end-text">Pas de correction, pas de note. On y revient plus tard, tous ensemble.</p>
-    </div>
+  <section class="screen end-screen" id="triEndScreen">
+    <div class="end-icon">✓</div>
+    <div class="end-title">C'est enregistré</div>
+    <p class="end-text">Pas de correction, pas de note. On y revient plus tard, tous ensemble.</p>
     <button class="btn primary" onclick="showScreen('mgScreen')">Retour au parcours</button>
   </section>
 
@@ -218,28 +218,65 @@
     <div class="stack">
 
       <div class="cd-box">
-        <div class="cd-label">À regarder</div>
-        <iframe class="cd-media" id="cdVideoFrame" src="" title="Vidéo France 24" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-        <p class="cd-note"><b>France 24 — Info ou Intox</b>, « Violences faites aux femmes : la propagande masculiniste débunkée ». Extrait : les 3 premières minutes.</p>
+        <div class="cd-label">À regarder — partie 1/2 (1:30)</div>
+        <iframe class="cd-media" id="cdVideoFrame1" src="" title="Vidéo France 24 — partie 1" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        <p class="cd-note"><b>France 24 — Info ou Intox</b>, « Violences faites aux femmes : la propagande masculiniste débunkée ». Extrait 1, 0:00 à 1:30.</p>
+      </div>
+
+      <div class="cd-box" id="cdVideo2Box" style="display:none;">
+        <div class="cd-label">À regarder — partie 2/2 (1:30)</div>
+        <iframe class="cd-media" id="cdVideoFrame2" src="" title="Vidéo France 24 — partie 2" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        <p class="cd-note">Extrait 2, 1:30 à 3:00.</p>
         <button class="btn blue" onclick="startMatch()">Faire l'activité</button>
       </div>
-
-      <div class="cd-box" id="matchBox" style="display:none;">
-        <div class="cd-label">Relie chaque idée reçue à sa réfutation</div>
-        <div class="match-row" id="matchZone"></div>
-        <p class="tri-hint" id="matchStatus"></p>
-      </div>
+      <button class="btn ghost" id="cdVideo2Reveal" onclick="revealVideo2()">Voir la partie 2</button>
 
       <div class="cd-box" id="podcastBox" style="display:none;">
-        <div class="cd-label">À écouter</div>
+        <div class="cd-label">À écouter (3 min max)</div>
         <iframe class="cd-media" style="aspect-ratio:auto; height:152px;" src="https://open.spotify.com/embed/episode/24vZPcysGmhuDbuSFLya5r?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-        <p class="cd-note"><b>Les couilles sur la table</b>, « Contre la rhétorique masculiniste », avec le politologue Francis Dupuis-Déri. Écoute le passage indiqué par ta prof (les 5 premières minutes environ).</p>
+        <p class="cd-note"><b>Les couilles sur la table</b>, « Contre la rhétorique masculiniste », avec le politologue Francis Dupuis-Déri. ⏱ N'écoute que les 3 premières minutes (le lecteur affiche l'épisode entier, mais tu t'arrêtes à 3:00).</p>
         <button class="btn blue" onclick="startVF()">Faire l'activité</button>
       </div>
 
-      <div id="vfBox" style="display:none; width:100%;"></div>
-
     </div>
+  </section>
+
+  <!-- ===================== ACTIVITÉ JEU — ASSOCIATION ===================== -->
+  <section class="screen" id="matchScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('cdScreen')">←</button>
+      <div class="stat-pill">Trouvées <b id="matchScoreLabel">0/4</b></div>
+    </div>
+    <p class="page-title" style="font-size:16px;">Relie chaque idée reçue à sa réfutation</p>
+    <p class="target-sub">Touche une carte à gauche, puis sa réponse à droite.</p>
+    <div class="stack">
+      <div class="match-row" id="matchZone"></div>
+    </div>
+    <div id="matchDoneBox" style="display:none; width:100%; flex:none;">
+      <button class="btn primary" onclick="finishMatch()">Continuer</button>
+    </div>
+  </section>
+
+  <!-- ===================== ACTIVITÉ JEU — VRAI/FAUX ===================== -->
+  <section class="screen" id="vfScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('cdScreen')">←</button>
+      <div class="stat-pill">Score <b id="vfScoreLabel">0/3</b></div>
+    </div>
+    <p class="page-title" style="font-size:16px;">Vrai ou faux ?</p>
+    <p class="target-sub">D'après ce que dit Francis Dupuis-Déri dans l'extrait.</p>
+    <div class="stack" id="vfBox"></div>
+    <div id="vfDoneBox" style="display:none; width:100%; flex:none;">
+      <button class="btn primary" onclick="finishVF()">Terminer</button>
+    </div>
+  </section>
+
+  <!-- ===================== FIN CONTRE-DISCOURS ===================== -->
+  <section class="screen end-screen" id="cdEndScreen">
+    <div class="end-icon">✓</div>
+    <div class="end-title">Bien joué</div>
+    <p class="end-text">On en reparle tous ensemble en classe.</p>
+    <button class="btn primary" onclick="showScreen('mgScreen')">Retour au parcours</button>
   </section>
 
   <!-- ===================== RÉSULTATS PROF (masqué, #resultats) ===================== -->
@@ -363,10 +400,16 @@ function triDecision(reponse){
 /* ================= CONTRE-DISCOURS ================= */
 function startContreDiscours(){
   showScreen('cdScreen');
-  document.getElementById('matchBox').style.display = 'none';
+  document.getElementById('cdVideo2Box').style.display = 'none';
+  document.getElementById('cdVideo2Reveal').style.display = 'block';
   document.getElementById('podcastBox').style.display = 'none';
-  document.getElementById('vfBox').style.display = 'none';
-  document.getElementById('cdVideoFrame').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=0&end=180&rel=0';
+  document.getElementById('cdVideoFrame1').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=0&end=90&rel=0';
+  document.getElementById('cdVideoFrame2').src = '';
+}
+function revealVideo2(){
+  document.getElementById('cdVideoFrame2').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=90&end=180&rel=0';
+  document.getElementById('cdVideo2Box').style.display = 'block';
+  document.getElementById('cdVideo2Reveal').style.display = 'none';
 }
 
 const MATCH_PAIRS = [
@@ -381,8 +424,10 @@ const MATCH_PAIRS = [
 ];
 let matchSelected = null, matchSolved = 0;
 function startMatch(){
-  document.getElementById('matchBox').style.display = 'block';
+  showScreen('matchScreen');
+  document.getElementById('matchDoneBox').style.display = 'none';
   matchSolved = 0; matchSelected = null;
+  document.getElementById('matchScoreLabel').textContent = '0/'+MATCH_PAIRS.length;
   const zone = document.getElementById('matchZone');
   zone.innerHTML = '';
   const myths = MATCH_PAIRS.map((p,i)=>({...p, i, kind:'myth'}));
@@ -401,7 +446,6 @@ function startMatch(){
     el.onclick = ()=>pickMatch(el);
     zone.appendChild(el);
   });
-  document.getElementById('matchStatus').textContent = '0 / '+MATCH_PAIRS.length+' associations trouvées';
 }
 function pickMatch(el){
   if(el.classList.contains('solved')) return;
@@ -420,15 +464,19 @@ function pickMatch(el){
     matchSelected.classList.remove('selected'); matchSelected.classList.add('solved');
     el.classList.add('solved');
     matchSelected = null; matchSolved++;
-    document.getElementById('matchStatus').textContent = matchSolved+' / '+MATCH_PAIRS.length+' associations trouvées';
+    document.getElementById('matchScoreLabel').textContent = matchSolved+'/'+MATCH_PAIRS.length;
     if(matchSolved === MATCH_PAIRS.length){
-      document.getElementById('podcastBox').style.display = 'block';
+      document.getElementById('matchDoneBox').style.display = 'block';
     }
   } else {
     [matchSelected, el].forEach(c=>{ c.classList.add('shake'); setTimeout(()=>c.classList.remove('shake'),300); });
     matchSelected.classList.remove('selected');
     matchSelected = null;
   }
+}
+function finishMatch(){
+  showScreen('cdScreen');
+  document.getElementById('podcastBox').style.display = 'block';
 }
 
 const VF_ITEMS = [
@@ -439,9 +487,13 @@ const VF_ITEMS = [
   { q:"Selon lui, les hommes ne rencontrent aucune difficulté dans la société actuelle.", a:false,
     fb:"Faux — il ne nie pas les difficultés, il critique la façon dont elles sont récupérées politiquement." }
 ];
+let vfScore = 0, vfAnswered = 0;
 function startVF(){
+  showScreen('vfScreen');
+  vfScore = 0; vfAnswered = 0;
+  document.getElementById('vfDoneBox').style.display = 'none';
+  document.getElementById('vfScoreLabel').textContent = '0/'+VF_ITEMS.length;
   const box = document.getElementById('vfBox');
-  box.style.display = 'block';
   box.innerHTML = '';
   VF_ITEMS.forEach((item,i)=>{
     const card = document.createElement('div');
@@ -461,9 +513,17 @@ function answerVF(btn, i, userSaysTrue){
   const item = VF_ITEMS[i];
   const buttons = btn.parentElement.querySelectorAll('button');
   buttons.forEach(b=>b.disabled = true);
-  const correctBtn = userSaysTrue === item.a ? btn : (userSaysTrue ? buttons[1] : buttons[0]);
   btn.classList.add(userSaysTrue === item.a ? 'picked-ok' : 'picked-bad');
   document.getElementById('vfFb'+i).classList.add('show');
+  if(userSaysTrue === item.a) vfScore++;
+  vfAnswered++;
+  document.getElementById('vfScoreLabel').textContent = vfScore+'/'+VF_ITEMS.length;
+  if(vfAnswered === VF_ITEMS.length){
+    document.getElementById('vfDoneBox').style.display = 'block';
+  }
+}
+function finishVF(){
+  showScreen('cdEndScreen');
 }
 
 /* ================= RÉSULTATS (accès via #resultats) ================= */
