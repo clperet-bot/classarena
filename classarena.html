@@ -433,14 +433,25 @@
     <div class="stack" id="playerList"></div>
   </section>
 
+  <!-- MATIERE SELECT -->
+  <section class="screen" id="matiereScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backToPlayerScreen()">←</button>
+      <div class="stat-pill" id="matiereClassPill">Classe</div>
+      <div style="width:38px"></div>
+    </div>
+    <p class="page-title">Choisis ta matière</p>
+    <div class="stack" id="matiereList"></div>
+  </section>
+
   <!-- THEME SELECT -->
   <section class="screen" id="themeScreen">
     <div class="topbar">
-      <button class="icon-btn" onclick="backToPlayerScreen()">←</button>
+      <button class="icon-btn" onclick="backToMatiereScreen()">←</button>
       <div class="stat-pill" id="themeClassPill">Classe</div>
       <div style="width:38px"></div>
     </div>
-    <p class="page-title">Choisis un thème</p>
+    <p class="page-title" id="themeScreenTitle">Choisis un thème</p>
     <div class="stack" id="themeList"></div>
   </section>
 
@@ -681,6 +692,10 @@
         <div class="chip-row" id="themeClassChips"></div>
       </div>
       <div class="field">
+        <label>Matière</label>
+        <div class="chip-row" id="themeMatiereChips"></div>
+      </div>
+      <div class="field">
         <label>Préfixe affiché avant chaque terme (facultatif)</label>
         <input type="text" id="themePrefixInput" placeholder="ex: to ">
       </div>
@@ -919,6 +934,7 @@ const DEFAULT_CONFIG = {
   themes: [
     {
       id: "irregular-verbs",
+      matiere: "Anglais",
       title: "Verbes irréguliers",
       classes: ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"],
       prefix: "to ",
@@ -933,6 +949,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "solve-the-mystery",
+      matiere: "Anglais",
       title: "Solve the Mystery — vocabulaire",
       classes: ["1ère MES","1ère MELEC"],
       prefix: "",
@@ -946,6 +963,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "from-art-to-ad",
+      matiere: "Anglais",
       title: "From Art to Ad — vocabulaire",
       classes: ["2nde MES"],
       prefix: "",
@@ -959,6 +977,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "vocab-riche",
+      matiere: "Français",
       title: "Mieux s'exprimer — vocabulaire riche",
       classes: ALL_CLASSES,
       prefix: "",
@@ -971,6 +990,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "conjugaison",
+      matiere: "Français",
       title: "Conjugaison — temps verbaux",
       classes: ALL_CLASSES,
       prefix: "",
@@ -983,6 +1003,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "orthographe",
+      matiere: "Français",
       title: "Orthographe — homophones",
       classes: ALL_CLASSES,
       prefix: "",
@@ -995,6 +1016,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "modals",
+      matiere: "Anglais",
       title: "Modal verbs — les modaux",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1008,6 +1030,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "conditionals",
+      matiere: "Anglais",
       title: "If-clauses — phrases conditionnelles",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1021,6 +1044,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "pronouns",
+      matiere: "Anglais",
       title: "Pronoms personnels anglais",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1034,6 +1058,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "temps-narration",
+      matiere: "Français",
       title: "Les temps dans la narration",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1046,6 +1071,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "syntaxe",
+      matiere: "Français",
       title: "Syntaxe — corrige la phrase",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1058,6 +1084,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "possessive-s",
+      matiere: "Anglais",
       title: "La possession avec 's (Cluedo)",
       classes: ["1ère MES","1ère MELEC"],
       prefix: "",
@@ -1118,7 +1145,7 @@ async function fetchLeaderboard(classe, mode){
 // ils apparaissent dans la liste des thèmes comme les autres, mais ouvrent
 // une page à part au lieu de lancer un mode de jeu classique.
 const EXTERNAL_THEMES = [
-  { title: "Mauvais genre", badge: "Parcours", classes: ALL_CLASSES, external: true, url: "reflexes-sexistes.html" }
+  { title: "Mauvais genre", badge: "Parcours", matiere: "Français", classes: ALL_CLASSES, external: true, url: "reflexes-sexistes.html" }
 ];
 
 let CONFIG = loadConfig();
@@ -1222,7 +1249,8 @@ function backFromGame(){
 }
 
 /* ---------------- STUDENT FLOW STATE ---------------- */
-let selectedClass = null, selectedTheme = null, currentMode = null, currentPlayer = null;
+let selectedClass = null, selectedTheme = null, currentMode = null, currentPlayer = null, selectedMatiere = null;
+const MATIERES = ["Français","Anglais","Autre"];
 let ITEMS = [], PREFIX = '', PROMPT = '';
 let playerHp = 100, monsterHp = 100;
 
@@ -1266,15 +1294,47 @@ function renderPlayerList(){
 }
 function selectPlayer(name){
   currentPlayer = name;
-  document.getElementById('themeClassPill').textContent = selectedClass + ' · ' + name;
+  document.getElementById('matiereClassPill').textContent = selectedClass + ' · ' + name;
+  renderMatiereList();
+  showScreen('matiereScreen');
+}
+function classThemesAndExternals(){
+  const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass));
+  const externals = EXTERNAL_THEMES.filter(t=> t.classes.includes(selectedClass));
+  return list.concat(externals);
+}
+function themeMatiere(t){ return t.matiere || 'Autre'; }
+function renderMatiereList(){
+  const wrap = document.getElementById('matiereList');
+  wrap.innerHTML = '';
+  const all = classThemesAndExternals();
+  const present = MATIERES.filter(m => all.some(t => themeMatiere(t) === m));
+  if(present.length === 0){
+    wrap.innerHTML = '<p style="color:var(--dim);font-size:14px;">Aucun thème pour cette classe pour l\'instant.</p>';
+    return;
+  }
+  present.forEach(m=>{
+    const card = document.createElement('div');
+    card.className = 'theme-card';
+    const n = all.filter(t=> themeMatiere(t) === m).length;
+    card.innerHTML = `<h3>${escapeHtml(m)}</h3><p>${n} thème${n>1?'s':''}</p>`;
+    card.onclick = ()=> selectMatiere(m);
+    wrap.appendChild(card);
+  });
+}
+function selectMatiere(m){
+  selectedMatiere = m;
+  document.getElementById('themeClassPill').textContent = selectedClass + ' · ' + currentPlayer;
+  document.getElementById('themeScreenTitle').textContent = 'Choisis un thème — ' + m;
   renderThemeList();
   showScreen('themeScreen');
 }
+function backToMatiereScreen(){ renderMatiereList(); showScreen('matiereScreen'); }
 function renderThemeList(){
   const wrap = document.getElementById('themeList');
   wrap.innerHTML = '';
-  const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass));
-  const externals = EXTERNAL_THEMES.filter(t=> t.classes.includes(selectedClass));
+  const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass) && themeMatiere(t) === selectedMatiere);
+  const externals = EXTERNAL_THEMES.filter(t=> t.classes.includes(selectedClass) && themeMatiere(t) === selectedMatiere);
   if(list.length === 0 && externals.length === 0){
     wrap.innerHTML = '<p style="color:var(--dim);font-size:14px;">Aucun thème pour cette classe pour l\'instant.</p>';
     return;
@@ -2315,12 +2375,12 @@ function importRosterExcel(event){
 }
 
 /* ---- theme edit working state ---- */
-let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editModes = [], editLockedMode = 'swipe';
+let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editModes = [], editLockedMode = 'swipe', editMatiere = 'Français';
 
 function openThemeEdit(i){
   editingThemeIndex = (typeof i === 'number') ? i : null;
   const t = editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex] : {
-    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide','progressif'], lockedMode:'swipe', items:[]
+    title:'', classes:[], matiere:'Français', prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide','progressif'], lockedMode:'swipe', items:[]
   };
   document.getElementById('themeEditTitle').textContent = editingThemeIndex !== null ? 'Modifier le thème' : 'Nouveau thème';
   document.getElementById('themeTitleInput').value = t.title;
@@ -2328,11 +2388,24 @@ function openThemeEdit(i){
   document.getElementById('themePromptInput').value = t.prompt || '';
   document.getElementById('themeItemsTextarea').value = t.items.map(x=>x.join(' ; ')).join('\n');
   renderThemeClassChips(t.classes || []);
+  renderThemeMatiereChips(t.matiere || 'Français');
   renderModeModeSegment(t.modeMode || 'choice');
   renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs','guide','progressif']);
   renderLockedModeSelect(t.lockedMode || 'swipe');
   document.getElementById('deleteThemeBtn').style.display = editingThemeIndex !== null ? 'block' : 'none';
   showScreen('themeEditScreen');
+}
+function renderThemeMatiereChips(selected){
+  editMatiere = selected;
+  const wrap = document.getElementById('themeMatiereChips');
+  wrap.innerHTML = '';
+  MATIERES.forEach(m=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip' + (editMatiere === m ? ' active' : '');
+    chip.textContent = m;
+    chip.onclick = ()=> renderThemeMatiereChips(m);
+    wrap.appendChild(chip);
+  });
 }
 function renderThemeClassChips(selected){
   editClasses = selected.slice();
@@ -2398,6 +2471,7 @@ function saveTheme(){
   const theme = {
     id: editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex].id : 'theme-'+Date.now(),
     title, classes: editClasses.slice(),
+    matiere: editMatiere,
     prefix: document.getElementById('themePrefixInput').value,
     prompt: document.getElementById('themePromptInput').value.trim() || 'Trouve la bonne réponse.',
     modeMode: editModeMode,
