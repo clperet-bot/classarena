@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Déconstruire nos réflexes sexistes</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#12142B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mauvais genre">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12142B; --bg2:#1C1F3E; --bg3:#252A52;
+    --lime:#C6FF3D; --coral:#FF5C72; --blue:#5AC8FA; --amber:#FFB74D; --violet:#B98CFF;
+    --text:#F5F6FA; --dim:#9AA0C4;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; height:100%; background:var(--bg); color:var(--text);
+    font-family:'Space Grotesk', system-ui, sans-serif; overflow:hidden;}
+  #app{position:relative; width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column;
+    align-items:center; padding:20px 16px 24px; max-width:520px; margin:0 auto;}
+  .screen{display:none; flex-direction:column; align-items:center; width:100%; height:100%;
+    animation:fade .25s ease; overflow-y:auto; overflow-x:hidden;}
+  .screen.active{display:flex;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+
+  .logo{font-family:'Bungee', sans-serif; font-size:clamp(24px,7vw,34px); letter-spacing:.5px;
+    text-align:center; line-height:1.1; margin:10px 0 4px;}
+  .logo span{color:var(--lime);}
+  .tagline{color:var(--dim); font-size:13px; text-align:center; margin-bottom:24px; font-style:italic;}
+  .page-title{font-family:'Bungee',sans-serif; font-size:19px; text-align:center; margin:4px 0 4px;}
+  .page-sub{color:var(--dim); font-size:13px; text-align:center; margin-bottom:6px; font-style:italic;}
+
+  .topbar{width:100%; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; gap:10px; flex:none;}
+  .icon-btn{background:var(--bg2); border:none; color:var(--text); width:38px; height:38px; border-radius:10px;
+    font-size:16px; cursor:pointer; flex:none; display:flex; align-items:center; justify-content:center;}
+
+  .stack{display:flex; flex-direction:column; width:100%; flex:1; overflow-y:auto; overflow-x:hidden; padding-bottom:6px; min-width:0;}
+  .stack *{min-width:0;}
+
+  .mode-card{background:var(--bg2); border:2px solid transparent; border-radius:18px; padding:20px;
+    text-align:left; cursor:pointer; flex:none; display:flex; align-items:center; gap:16px; margin-bottom:12px;
+    transition:border-color .15s, transform .1s;}
+  .mode-card:active{transform:scale(.98);}
+  .mode-icon{width:52px; height:52px; flex:none; border-radius:14px; display:flex; align-items:center;
+    justify-content:center; font-size:26px;}
+  .tri-c .mode-icon{background:rgba(198,255,61,.15); color:var(--lime);}
+  .cd-c .mode-icon{background:rgba(90,200,250,.15); color:var(--blue);}
+  .mg-c .mode-icon{background:rgba(255,92,114,.15); color:var(--coral);}
+  .tri-c:hover, .tri-c:focus-visible{border-color:var(--lime);}
+  .cd-c:hover, .cd-c:focus-visible{border-color:var(--blue);}
+  .mg-c:hover, .mg-c:focus-visible{border-color:var(--coral);}
+  .mode-title{font-weight:700; font-size:17px; margin:0 0 3px;}
+  .mode-desc{color:var(--dim); font-size:13px; margin:0; line-height:1.4;}
+  .mode-locked{opacity:.4; cursor:default;}
+
+  .btn{flex:none; width:100%; padding:15px; border-radius:14px; border:none; font-family:inherit;
+    font-weight:700; font-size:15px; cursor:pointer; margin-top:8px;}
+  .btn.primary{background:var(--lime); color:#0f2400;}
+  .btn.ghost{background:var(--bg2); color:var(--text);}
+  .btn.blue{background:var(--blue); color:#04202b;}
+  .btn:active{transform:scale(.98);}
+
+  /* ---------- TRI RAPIDE (swipe 3 directions) ---------- */
+  #triScreen{justify-content:flex-start;}
+  .stat-pill{background:var(--bg2); border-radius:999px; padding:8px 16px; font-size:13px; color:var(--dim);}
+  .stat-pill b{color:var(--lime); font-weight:700;}
+  .progress-track{width:100%; height:6px; background:var(--bg2); border-radius:999px; overflow:hidden; margin-bottom:16px; flex:none;}
+  .progress-fill{height:100%; background:var(--lime); border-radius:999px; transition:width .3s;}
+  .target-sub{color:var(--dim); font-size:13px; text-align:center; margin-bottom:14px;}
+  .card-zone{position:relative; width:100%; flex:1; display:flex; align-items:center; justify-content:center; min-height:260px;}
+  .tri-card{position:absolute; width:88%; max-width:340px; min-height:240px; background:var(--bg2);
+    border-radius:24px; padding:28px 22px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; cursor:grab; user-select:none; touch-action:none;
+    box-shadow:0 10px 30px rgba(0,0,0,.35); border:2px solid var(--bg3);}
+  .tri-card.dragging{cursor:grabbing; transition:none;}
+  .tri-word{font-family:'Bungee', sans-serif; font-size:clamp(22px,6.5vw,30px); word-break:break-word;}
+  .tri-stamp{position:absolute; font-family:'Bungee',sans-serif; font-size:18px; border:4px solid; border-radius:10px;
+    padding:4px 12px; opacity:0;}
+  .tri-stamp.f{top:26px; right:18px; color:var(--coral); border-color:var(--coral); transform:rotate(-10deg);}
+  .tri-stamp.h{top:26px; left:18px; color:var(--blue); border-color:var(--blue); transform:rotate(10deg);}
+  .tri-stamp.d{bottom:26px; left:50%; transform:translateX(-50%) rotate(-4deg); color:var(--amber); border-color:var(--amber);}
+  .tri-buttons{display:flex; gap:16px; margin-top:16px; flex:none;}
+  .tri-btn{border-radius:16px; border:none; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px;
+    cursor:pointer; padding:10px 14px; display:flex; flex-direction:column; align-items:center; gap:2px;}
+  .tri-btn .ic{font-size:18px;}
+  .tri-btn.f{background:var(--coral); color:#2a0810;}
+  .tri-btn.d{background:var(--amber); color:#2a1900;}
+  .tri-btn.h{background:var(--blue); color:#04202b;}
+  .tri-hint{color:var(--dim); font-size:12px; margin-top:10px; text-align:center; flex:none;}
+  .tri-hint b{color:var(--text);}
+
+  .end-icon{font-size:44px; margin-bottom:6px;}
+  .end-title{font-family:'Bungee',sans-serif; font-size:20px; text-align:center; margin-bottom:8px;}
+  .end-text{color:var(--dim); font-size:14px; text-align:center; margin-bottom:22px; line-height:1.5; max-width:340px;}
+
+  /* ---------- CONTRE-DISCOURS ---------- */
+  .cd-box{width:100%; background:var(--bg2); border-radius:18px; padding:16px; margin-bottom:14px; flex:none;}
+  .cd-label{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--dim); font-weight:700; margin-bottom:8px;}
+  .cd-media{width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; background:#000; margin-bottom:10px; border:none;}
+  .cd-note{font-size:12.5px; color:var(--dim); line-height:1.5;}
+  .cd-note b{color:var(--text);}
+
+  .match-row{display:flex; flex-direction:column; gap:10px; width:100%; margin:10px 0;}
+  .match-card{background:var(--bg3); border:2px solid transparent; border-radius:14px; padding:13px 14px;
+    font-size:13.5px; line-height:1.4; cursor:pointer; text-align:left;}
+  .match-card.myth{border-left:4px solid var(--coral);}
+  .match-card.reb{border-left:4px solid var(--blue);}
+  .match-card.selected{border-color:var(--amber);}
+  .match-card.solved{border-color:var(--lime); opacity:.55; cursor:default;}
+  .match-card.shake{animation:shake .3s;}
+  @keyframes shake{25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}}
+
+  .vf-card{background:var(--bg2); border-radius:16px; padding:18px; width:100%; margin-bottom:12px; flex:none;}
+  .vf-q{font-size:14.5px; line-height:1.5; margin-bottom:12px;}
+  .vf-choices{display:flex; gap:10px;}
+  .vf-choices button{flex:1; padding:12px; border-radius:12px; border:none; font-family:inherit; font-weight:700;
+    font-size:14px; cursor:pointer; background:var(--bg3); color:var(--text);}
+  .vf-choices button.picked-ok{background:var(--lime); color:#0f2400;}
+  .vf-choices button.picked-bad{background:var(--coral); color:#2a0810;}
+  .vf-fb{font-size:12.5px; color:var(--dim); margin-top:8px; line-height:1.4; display:none;}
+  .vf-fb.show{display:block;}
+
+  #resultsScreen .bar-row{width:100%; margin-bottom:14px;}
+  #resultsScreen .bar-label{font-size:12.5px; margin-bottom:5px; color:var(--text);}
+  #resultsScreen .bar-track{width:100%; height:22px; background:var(--bg3); border-radius:8px; overflow:hidden; display:flex;}
+  #resultsScreen .bar-f{background:var(--coral); height:100%;}
+  #resultsScreen .bar-d{background:var(--amber); height:100%;}
+  #resultsScreen .bar-h{background:var(--blue); height:100%;}
+  #resultsScreen .bar-legend{display:flex; gap:12px; font-size:11px; color:var(--dim); margin-top:3px;}
+  #resultsScreen .bar-legend span{display:flex; align-items:center; gap:4px;}
+  #resultsScreen .dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===================== HUB ===================== -->
+  <section class="screen active" id="hubScreen">
+    <div class="logo">Déconstruire<br>nos <span>réflexes</span> sexistes</div>
+    <p class="tagline">choisis un parcours</p>
+    <div class="stack">
+      <div class="mode-card mg-c" onclick="showScreen('mgScreen')">
+        <div class="mode-icon">✎</div>
+        <div><p class="mode-title">Mauvais genre</p>
+          <p class="mode-desc">Un parcours pour déconstruire nos réflexes sexistes.</p></div>
+      </div>
+      <div class="mode-card mode-locked">
+        <div class="mode-icon">＋</div>
+        <div><p class="mode-title">D'autres parcours à venir</p>
+          <p class="mode-desc">Cet espace s'agrandira au fil de l'année.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MAUVAIS GENRE — menu ===================== -->
+  <section class="screen" id="mgScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('hubScreen')">←</button>
+      <div style="flex:1"></div>
+    </div>
+    <div class="page-title">Mauvais genre</div>
+    <p class="page-sub">un parcours pour déconstruire nos réflexes sexistes</p>
+    <div class="stack" style="margin-top:10px;">
+      <div class="mode-card tri-c" onclick="startTri()">
+        <div class="mode-icon">↔</div>
+        <div><p class="mode-title">Le tri rapide</p>
+          <p class="mode-desc">Trie des mots en moins de 3 secondes. Ne réfléchis pas.</p></div>
+      </div>
+      <div class="mode-card cd-c" onclick="startContreDiscours()">
+        <div class="mode-icon">▶</div>
+        <div><p class="mode-title">Contre-discours</p>
+          <p class="mode-desc">Une vidéo et un podcast qui démontent de vraies idées reçues.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TRI RAPIDE ===================== -->
+  <section class="screen" id="triScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('mgScreen')">←</button>
+      <div class="stat-pill">Mot <b id="triRound">1/14</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="triProgress" style="width:0%"></div></div>
+    <p class="target-sub">Coche vite, sans réfléchir. Ta réponse est anonyme.</p>
+    <div class="card-zone" id="triZone"></div>
+    <div class="tri-buttons">
+      <button class="tri-btn f" onclick="triDecision('femmes')"><span class="ic">←</span>Femmes</button>
+      <button class="tri-btn d" onclick="triDecision('deux')"><span class="ic">↑</span>Les deux</button>
+      <button class="tri-btn h" onclick="triDecision('hommes')"><span class="ic">→</span>Hommes</button>
+    </div>
+    <p class="tri-hint">Glisse la carte, ou touche un bouton.</p>
+  </section>
+
+  <!-- ===================== FIN TRI ===================== -->
+  <section class="screen" id="triEndScreen">
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div class="end-icon">✓</div>
+      <div class="end-title">C'est enregistré</div>
+      <p class="end-text">Pas de correction, pas de note. On y revient plus tard, tous ensemble.</p>
+    </div>
+    <button class="btn primary" onclick="showScreen('mgScreen')">Retour au parcours</button>
+  </section>
+
+  <!-- ===================== CONTRE-DISCOURS ===================== -->
+  <section class="screen" id="cdScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('mgScreen')">←</button>
+      <div style="flex:1"></div>
+    </div>
+    <div class="page-title" style="margin-bottom:14px;">Contre-discours</div>
+    <div class="stack">
+
+      <div class="cd-box">
+        <div class="cd-label">À regarder</div>
+        <iframe class="cd-media" id="cdVideoFrame" src="" title="Vidéo France 24" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        <p class="cd-note"><b>France 24 — Info ou Intox</b>, « Violences faites aux femmes : la propagande masculiniste débunkée ». Extrait : les 3 premières minutes.</p>
+        <button class="btn blue" onclick="startMatch()">Faire l'activité</button>
+      </div>
+
+      <div class="cd-box" id="matchBox" style="display:none;">
+        <div class="cd-label">Relie chaque idée reçue à sa réfutation</div>
+        <div class="match-row" id="matchZone"></div>
+        <p class="tri-hint" id="matchStatus"></p>
+      </div>
+
+      <div class="cd-box" id="podcastBox" style="display:none;">
+        <div class="cd-label">À écouter</div>
+        <iframe class="cd-media" style="aspect-ratio:auto; height:152px;" src="https://open.spotify.com/embed/episode/24vZPcysGmhuDbuSFLya5r?utm_source=generator" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        <p class="cd-note"><b>Les couilles sur la table</b>, « Contre la rhétorique masculiniste », avec le politologue Francis Dupuis-Déri. Écoute le passage indiqué par ta prof (les 5 premières minutes environ).</p>
+        <button class="btn blue" onclick="startVF()">Faire l'activité</button>
+      </div>
+
+      <div id="vfBox" style="display:none; width:100%;"></div>
+
+    </div>
+  </section>
+
+  <!-- ===================== RÉSULTATS PROF (masqué, #resultats) ===================== -->
+  <section class="screen" id="resultsScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('hubScreen')">←</button>
+      <div style="flex:1"></div>
+    </div>
+    <div class="page-title">Résultats — Le tri rapide</div>
+    <p class="page-sub" id="resultsSub">chargement…</p>
+    <div class="stack" id="resultsZone" style="margin-top:10px;"></div>
+  </section>
+
+</div>
+
+<script>
+/* ================= SUPABASE ================= */
+const SUPABASE_URL = "https://eyfqryrwivjwwaftehdc.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5ZnFyeXJ3aXZqd3dhZnRlaGRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczNDU2NjIsImV4cCI6MjEwMjkyMTY2Mn0.i9YiNL45rILlxyckLMl3SJVIIib8P40DSIaiNkm89tc";
+function sbHeaders(extra){ return Object.assign({ 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer '+SUPABASE_ANON_KEY }, extra||{}); }
+async function submitTri(mot, reponse){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/mauvaisgenre_tri`, {
+      method:'POST',
+      headers: sbHeaders({'Content-Type':'application/json', 'Prefer':'return=minimal'}),
+      body: JSON.stringify([{ mot: mot, reponse: reponse }])
+    });
+  }catch(e){}
+}
+async function fetchTriResults(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/mauvaisgenre_tri?select=mot,reponse`, { headers: sbHeaders() });
+    if(!res.ok) return [];
+    return await res.json();
+  }catch(e){ return []; }
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null ? '' : s; return d.innerHTML; }
+
+/* ================= TRI RAPIDE ================= */
+const TRI_WORDS = [
+  "un poêle à bois","une voiture","un chantier","le ménage","la patience",
+  "la force physique","la précision","rêver de devenir pompier·ère","rêver de décorer sa maison",
+  "pleurer facilement","réparer un objet cassé","prendre soin d'un bébé",
+  "être doué·e en maths","avoir le sens de l'orientation"
+];
+let triIndex = 0, triList = [];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function startTri(){
+  triList = shuffle(TRI_WORDS);
+  triIndex = 0;
+  showScreen('triScreen');
+  renderTriCard();
+}
+function renderTriCard(){
+  const zone = document.getElementById('triZone');
+  zone.innerHTML = '';
+  document.getElementById('triRound').textContent = Math.min(triIndex+1, TRI_WORDS.length)+'/'+TRI_WORDS.length;
+  document.getElementById('triProgress').style.width = (triIndex/TRI_WORDS.length*100)+'%';
+  if(triIndex >= triList.length){ showScreen('triEndScreen'); return; }
+  const card = document.createElement('div');
+  card.className = 'tri-card';
+  card.id = 'activeTriCard';
+  card.innerHTML = `
+    <div class="tri-stamp f">FEMMES</div>
+    <div class="tri-stamp h">HOMMES</div>
+    <div class="tri-stamp d">LES DEUX</div>
+    <div class="tri-word">${escapeHtml(triList[triIndex])}</div>
+  `;
+  zone.appendChild(card);
+  attachTriDrag(card);
+}
+function attachTriDrag(card){
+  let startX=0, startY=0, curX=0, curY=0, dragging=false;
+  const fStamp = card.querySelector('.tri-stamp.f');
+  const hStamp = card.querySelector('.tri-stamp.h');
+  const dStamp = card.querySelector('.tri-stamp.d');
+  function onDown(x,y){ dragging=true; startX=x; startY=y; card.classList.add('dragging'); }
+  function onMove(x,y){
+    if(!dragging) return;
+    curX = x-startX; curY = y-startY;
+    const rot = curX/14;
+    card.style.transform = `translate(${curX}px, ${curY}px) rotate(${rot}deg)`;
+    fStamp.style.opacity=0; hStamp.style.opacity=0; dStamp.style.opacity=0;
+    if(curY < -40 && Math.abs(curY) > Math.abs(curX)){ dStamp.style.opacity = Math.min(Math.abs(curY)/100,1); }
+    else if(curX < -30){ fStamp.style.opacity = Math.min(Math.abs(curX)/100,1); }
+    else if(curX > 30){ hStamp.style.opacity = Math.min(Math.abs(curX)/100,1); }
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging=false; card.classList.remove('dragging');
+    if(curY < -80 && Math.abs(curY) > Math.abs(curX)){ triDecision('deux'); }
+    else if(curX < -90){ triDecision('femmes'); }
+    else if(curX > 90){ triDecision('hommes'); }
+    else { card.style.transform=''; fStamp.style.opacity=0; hStamp.style.opacity=0; dStamp.style.opacity=0; }
+    curX=0; curY=0;
+  }
+  card.addEventListener('pointerdown', e=>{ card.setPointerCapture(e.pointerId); onDown(e.clientX,e.clientY); });
+  card.addEventListener('pointermove', e=> onMove(e.clientX,e.clientY));
+  card.addEventListener('pointerup', onUp);
+  card.addEventListener('pointercancel', onUp);
+}
+function triDecision(reponse){
+  const card = document.getElementById('activeTriCard');
+  if(!card || card.dataset.locked) return;
+  card.dataset.locked = '1';
+  const mot = triList[triIndex];
+  submitTri(mot, reponse);
+  let tx=0, ty=0;
+  if(reponse==='femmes') tx=-520; else if(reponse==='hommes') tx=520; else ty=-520;
+  card.style.transition = 'transform .3s ease, opacity .3s ease';
+  card.style.transform = `translate(${tx}px, ${ty}px) rotate(${tx/16}deg)`;
+  card.style.opacity = '0';
+  setTimeout(()=>{ triIndex++; renderTriCard(); }, 220);
+}
+
+/* ================= CONTRE-DISCOURS ================= */
+function startContreDiscours(){
+  showScreen('cdScreen');
+  document.getElementById('matchBox').style.display = 'none';
+  document.getElementById('podcastBox').style.display = 'none';
+  document.getElementById('vfBox').style.display = 'none';
+  document.getElementById('cdVideoFrame').src = 'https://www.youtube-nocookie.com/embed/2zOEHHgVSGM?start=0&end=180&rel=0';
+}
+
+const MATCH_PAIRS = [
+  { myth:"Les hommes seraient « en crise » à cause du féminisme.",
+    reb:"Les inégalités mesurées (salaires, postes de pouvoir, temps domestique) restent en moyenne favorables aux hommes." },
+  { myth:"Les violences conjugales toucheraient autant les hommes que les femmes.",
+    reb:"Les femmes représentent la grande majorité des victimes de violences conjugales graves et des féminicides." },
+  { myth:"Le décrochage scolaire des garçons prouverait une discrimination anti-garçons.",
+    reb:"Les écarts scolaires ont des causes sociales et économiques complexes, pas une politique hostile aux garçons." },
+  { myth:"Les pères n'obtiendraient presque jamais la garde de leurs enfants.",
+    reb:"Quand un père demande la garde (alternée ou exclusive), elle lui est accordée dans la grande majorité des cas." }
+];
+let matchSelected = null, matchSolved = 0;
+function startMatch(){
+  document.getElementById('matchBox').style.display = 'block';
+  matchSolved = 0; matchSelected = null;
+  const zone = document.getElementById('matchZone');
+  zone.innerHTML = '';
+  const myths = MATCH_PAIRS.map((p,i)=>({...p, i, kind:'myth'}));
+  const rebs = shuffle(MATCH_PAIRS.map((p,i)=>({...p, i, kind:'reb'})));
+  shuffle(myths).forEach(m=>{
+    const el = document.createElement('div');
+    el.className = 'match-card myth'; el.dataset.i = m.i; el.dataset.kind = 'myth';
+    el.textContent = m.myth;
+    el.onclick = ()=>pickMatch(el);
+    zone.appendChild(el);
+  });
+  rebs.forEach(r=>{
+    const el = document.createElement('div');
+    el.className = 'match-card reb'; el.dataset.i = r.i; el.dataset.kind = 'reb';
+    el.textContent = r.reb;
+    el.onclick = ()=>pickMatch(el);
+    zone.appendChild(el);
+  });
+  document.getElementById('matchStatus').textContent = '0 / '+MATCH_PAIRS.length+' associations trouvées';
+}
+function pickMatch(el){
+  if(el.classList.contains('solved')) return;
+  if(!matchSelected){
+    matchSelected = el;
+    el.classList.add('selected');
+    return;
+  }
+  if(matchSelected === el){ matchSelected.classList.remove('selected'); matchSelected = null; return; }
+  if(matchSelected.dataset.kind === el.dataset.kind){
+    matchSelected.classList.remove('selected');
+    matchSelected = el; el.classList.add('selected');
+    return;
+  }
+  if(matchSelected.dataset.i === el.dataset.i){
+    matchSelected.classList.remove('selected'); matchSelected.classList.add('solved');
+    el.classList.add('solved');
+    matchSelected = null; matchSolved++;
+    document.getElementById('matchStatus').textContent = matchSolved+' / '+MATCH_PAIRS.length+' associations trouvées';
+    if(matchSolved === MATCH_PAIRS.length){
+      document.getElementById('podcastBox').style.display = 'block';
+    }
+  } else {
+    [matchSelected, el].forEach(c=>{ c.classList.add('shake'); setTimeout(()=>c.classList.remove('shake'),300); });
+    matchSelected.classList.remove('selected');
+    matchSelected = null;
+  }
+}
+
+const VF_ITEMS = [
+  { q:"D'après Francis Dupuis-Déri, la « crise de la masculinité » est un fait scientifique établi.", a:false,
+    fb:"Faux — il la présente comme un récit idéologique à questionner, pas un fait scientifique." },
+  { q:"Il relie ce discours à des mouvements d'extrême droite.", a:true,
+    fb:"Vrai — c'est un des points centraux de son analyse." },
+  { q:"Selon lui, les hommes ne rencontrent aucune difficulté dans la société actuelle.", a:false,
+    fb:"Faux — il ne nie pas les difficultés, il critique la façon dont elles sont récupérées politiquement." }
+];
+function startVF(){
+  const box = document.getElementById('vfBox');
+  box.style.display = 'block';
+  box.innerHTML = '';
+  VF_ITEMS.forEach((item,i)=>{
+    const card = document.createElement('div');
+    card.className = 'vf-card';
+    card.innerHTML = `
+      <div class="vf-q">${escapeHtml(item.q)}</div>
+      <div class="vf-choices">
+        <button onclick="answerVF(this,${i},true)">Vrai</button>
+        <button onclick="answerVF(this,${i},false)">Faux</button>
+      </div>
+      <div class="vf-fb" id="vfFb${i}">${escapeHtml(item.fb)}</div>
+    `;
+    box.appendChild(card);
+  });
+}
+function answerVF(btn, i, userSaysTrue){
+  const item = VF_ITEMS[i];
+  const buttons = btn.parentElement.querySelectorAll('button');
+  buttons.forEach(b=>b.disabled = true);
+  const correctBtn = userSaysTrue === item.a ? btn : (userSaysTrue ? buttons[1] : buttons[0]);
+  btn.classList.add(userSaysTrue === item.a ? 'picked-ok' : 'picked-bad');
+  document.getElementById('vfFb'+i).classList.add('show');
+}
+
+/* ================= RÉSULTATS (accès via #resultats) ================= */
+async function renderResults(){
+  showScreen('resultsScreen');
+  document.getElementById('resultsSub').textContent = 'chargement…';
+  const rows = await fetchTriResults();
+  const byWord = {};
+  TRI_WORDS.forEach(w => byWord[w] = {femmes:0, hommes:0, deux:0});
+  rows.forEach(r=>{ if(byWord[r.mot] && byWord[r.mot][r.reponse]!==undefined) byWord[r.mot][r.reponse]++; });
+  const total = rows.length;
+  document.getElementById('resultsSub').textContent = total+' réponses enregistrées, tous parcours confondus';
+  const zone = document.getElementById('resultsZone');
+  zone.innerHTML = '';
+  TRI_WORDS.forEach(w=>{
+    const c = byWord[w];
+    const sum = c.femmes + c.hommes + c.deux;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const pf = sum ? (c.femmes/sum*100) : 0, ph = sum ? (c.hommes/sum*100) : 0, pd = sum ? (c.deux/sum*100) : 0;
+    row.innerHTML = `
+      <div class="bar-label">${escapeHtml(w)} <span style="color:var(--dim)">(${sum})</span></div>
+      <div class="bar-track">
+        <div class="bar-f" style="width:${pf}%"></div>
+        <div class="bar-d" style="width:${pd}%"></div>
+        <div class="bar-h" style="width:${ph}%"></div>
+      </div>`;
+    zone.appendChild(row);
+  });
+  const legend = document.createElement('div');
+  legend.className = 'bar-legend';
+  legend.innerHTML = `<span><span class="dot" style="background:var(--coral)"></span>Femmes</span>
+    <span><span class="dot" style="background:var(--amber)"></span>Les deux</span>
+    <span><span class="dot" style="background:var(--blue)"></span>Hommes</span>`;
+  zone.appendChild(legend);
+}
+
+if(location.hash === '#resultats'){ renderResults(); }
+</script>
+</body>
+</html>
