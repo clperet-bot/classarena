@@ -659,6 +659,8 @@
       <p class="section-title">Thèmes</p>
       <div id="teacherThemeList"></div>
       <button class="btn primary" style="margin-top:6px;" onclick="openThemeEdit()">+ Nouveau thème</button>
+      <p class="section-title" style="margin-top:18px;">Parcours</p>
+      <button class="btn ghost" style="width:100%;" onclick="location.href='reflexes-sexistes.html#resultats'">📊 Résultats — Mauvais genre</button>
     </div>
   </section>
 
@@ -1116,7 +1118,7 @@ async function fetchLeaderboard(classe, mode){
 // ils apparaissent dans la liste des thèmes comme les autres, mais ouvrent
 // une page à part au lieu de lancer un mode de jeu classique.
 const EXTERNAL_THEMES = [
-  { title: "Mauvais genre", badge: "Parcours", classes: ["2nde TNE"], external: true, url: "reflexes-sexistes.html" }
+  { title: "Mauvais genre", badge: "Parcours", classes: ALL_CLASSES, external: true, url: "reflexes-sexistes.html" }
 ];
 
 let CONFIG = loadConfig();
