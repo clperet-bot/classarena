@@ -53,9 +53,11 @@
   .tri-c .mode-icon{background:rgba(198,255,61,.15); color:var(--lime);}
   .cd-c .mode-icon{background:rgba(90,200,250,.15); color:var(--blue);}
   .mg-c .mode-icon{background:rgba(255,92,114,.15); color:var(--coral);}
+  .src-c .mode-icon{background:rgba(185,140,255,.15); color:var(--violet);}
   .tri-c:hover, .tri-c:focus-visible{border-color:var(--lime);}
   .cd-c:hover, .cd-c:focus-visible{border-color:var(--blue);}
   .mg-c:hover, .mg-c:focus-visible{border-color:var(--coral);}
+  .src-c:hover, .src-c:focus-visible{border-color:var(--violet);}
   .mode-title{font-weight:700; font-size:17px; margin:0 0 3px;}
   .mode-desc{color:var(--dim); font-size:13px; margin:0; line-height:1.4;}
   .mode-locked{opacity:.4; cursor:default;}
@@ -177,7 +179,12 @@
       <div class="mode-card cd-c" onclick="startContreDiscours()">
         <div class="mode-icon">▶</div>
         <div><p class="mode-title">Contre-discours</p>
-          <p class="mode-desc">Une vidéo et un podcast qui démontent de vraies idées reçues.</p></div>
+          <p class="mode-desc">7 idées reçues sur « la crise des hommes », déconstruites une par une.</p></div>
+      </div>
+      <div class="mode-card src-c" onclick="startSourcesIntro()">
+        <div class="mode-icon">📊</div>
+        <div><p class="mode-title">Sources & chiffres</p>
+          <p class="mode-desc">Ce que disent les vraies études sur les femmes dans les médias.</p></div>
       </div>
     </div>
   </section>
@@ -219,14 +226,30 @@
         <div class="cd-label">Le principe</div>
         <p class="cd-note">On entend souvent des idées reçues sur « la crise des hommes ». <b>7 citations</b>, une par une. À chaque fois : 3 propositions, une seule est la bonne réponse.</p>
       </div>
-      <button class="btn blue" onclick="startCitations()">Commencer</button>
+      <button class="btn blue" onclick="startCitations('discours')">Commencer</button>
     </div>
   </section>
 
-  <!-- ===================== CITATIONS — idée reçue + 3 propositions ===================== -->
+  <!-- ===================== SOURCES & CHIFFRES (intro) ===================== -->
+  <section class="screen" id="sourcesScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="showScreen('mgScreen')">←</button>
+      <div style="flex:1"></div>
+    </div>
+    <div class="page-title" style="margin-bottom:14px;">Sources & chiffres</div>
+    <div class="stack">
+      <div class="cd-box">
+        <div class="cd-label">Le principe</div>
+        <p class="cd-note">Cette fois, pas d'idées reçues à démonter : des <b>chiffres officiels</b> (Arcom, études sur le journalisme) sur la place des femmes dans les médias. <b>7 citations</b>, une par une, 3 propositions à chaque fois.</p>
+      </div>
+      <button class="btn blue" onclick="startCitations('sources')">Commencer</button>
+    </div>
+  </section>
+
+  <!-- ===================== CITATIONS — idée reçue / source + 3 propositions ===================== -->
   <section class="screen" id="citeScreen">
     <div class="topbar">
-      <button class="icon-btn" onclick="showScreen('cdScreen')">←</button>
+      <button class="icon-btn" onclick="goBackFromCite()">←</button>
       <div class="stat-pill">Citation <b id="citeIndexLabel">1/7</b></div>
     </div>
     <div class="cite-wrap" id="citeWrap"></div>
@@ -362,12 +385,15 @@ function triDecision(reponse){
 function startContreDiscours(){
   showScreen('cdScreen');
 }
+function startSourcesIntro(){
+  showScreen('sourcesScreen');
+}
 
 /* Idée reçue + 3 propositions (une seule bonne réponse). Contenu vérifié :
    argumentaire "propagande masculiniste" (France 24, Info ou Intox) et
    analyse du politologue Francis Dupuis-Déri (violences conjugales, garde
    d'enfants, décrochage scolaire, origine du discours de "crise de la masculinité"). */
-const CITATIONS = [
+const CITATIONS_DISCOURS = [
   { cite:"« Les hommes seraient aujourd'hui la vraie victime du féminisme, en pleine crise. »",
     choices:[
       "C'est vrai : les chiffres montrent que les hommes sont désormais désavantagés.",
@@ -418,26 +444,94 @@ const CITATIONS = [
     ], correct:2,
     fb:"Il ne nie pas que des hommes traversent de vraies difficultés — il critique la manière dont ce discours est ensuite instrumentalisé politiquement." }
 ];
-let citeIndex = 0;
-function startCitations(){
+
+/* Chiffres officiels vérifiés — Arcom (ex-CSA), régulateur de l'audiovisuel,
+   et étude sur la féminisation du journalisme en France (INA, la revue des médias).
+   Sources : arcom.fr (représentation des femmes à la télé/radio 2022 ; étude sur
+   la représentation des femmes dans les publicités télévisées 2021-2022) et
+   larevuedesmedias.ina.fr (expertes sur les plateaux ; féminisation du journalisme). */
+const CITATIONS_SOURCES = [
+  { cite:"L'Arcom (régulateur de l'audiovisuel) mesure chaque année le temps de parole des femmes à la télévision et à la radio françaises.",
+    choices:[
+      "Les femmes ont autant de temps de parole que les hommes, environ 50%.",
+      "Les femmes n'ont que 36% du temps de parole en 2022, alors qu'elles sont 44% des personnes à l'écran.",
+      "Les femmes n'ont quasiment aucun temps de parole, moins de 10%."
+    ], correct:1,
+    fb:"Même quand les femmes sont présentes à l'écran, elles parlent moins que les hommes : l'écart entre présence et temps de parole fait partie des indicateurs suivis par l'Arcom." },
+  { cite:"En 2014, le CSA (aujourd'hui Arcom) dénonçait moins de 30% de femmes parmi les expertes invitées sur les plateaux de télé et de radio.",
+    choices:[
+      "Rien n'a changé depuis : toujours moins de 30% en 2022.",
+      "C'est aujourd'hui la parité parfaite : 50% en 2022.",
+      "Le chiffre a progressé sans atteindre la parité : 45% de femmes expertes en 2022, soit +15 points depuis 2016."
+    ], correct:2,
+    fb:"Une vraie progression (de moins de 30% à 45% en huit ans), mais la parité n'est pas encore atteinte sur les plateaux." },
+  { cite:"L'Arcom a étudié 2310 publicités télévisées (2021-2022) pour mesurer la part des femmes dans les rôles publicitaires.",
+    choices:[
+      "Les femmes sont largement minoritaires dans les pubs, autour de 20% des rôles.",
+      "Les femmes représentent 51% des rôles publicitaires, proche de la parité globale — mais avec de forts écarts selon les secteurs.",
+      "Les hommes ont quasiment disparu des publicités télévisées."
+    ], correct:1,
+    fb:"Sur l'ensemble des publicités, la parité globale est presque atteinte — mais ce chiffre cache de grosses inégalités selon le type de produit vendu." },
+  { cite:"Cette même étude a regardé qui apparaît dans quel type de publicité : jeux d'argent, automobile, finance, soins du corps, mode et luxe...",
+    choices:[
+      "Les rôles sont répartis au hasard, sans lien avec le sujet de la publicité.",
+      "Les femmes sont sous-représentées uniquement dans les publicités destinées aux enfants.",
+      "Les femmes sont sous-représentées dans les pubs pour les jeux d'argent, l'automobile et la finance ; les hommes le sont dans les pubs pour les soins du corps et la mode/luxe."
+    ], correct:2,
+    fb:"Même quand la parité globale est presque atteinte, les rôles restent triés par secteur — chacun·e « à sa place » selon les stéréotypes du produit vendu." },
+  { cite:"L'étude a aussi comparé, entre femmes et hommes, la fréquence des scènes de nudité ou de corps sexualisés dans les publicités télévisées.",
+    choices:[
+      "Il n'y a aucune différence entre femmes et hommes sur ce point.",
+      "Les publicités montrant un corps féminin dénudé ou sexualisé sont beaucoup plus fréquentes qu'avec un corps masculin — un écart de 56 points.",
+      "Les hommes sont bien plus souvent montrés nus ou sexualisés que les femmes."
+    ], correct:1,
+    fb:"L'écart est massif : 56 points de différence entre les publicités montrant uniquement un corps féminin sexualisé/dénudé et celles montrant un corps masculin dans la même situation." },
+  { cite:"Une étude sur la féminisation du journalisme en France a suivi la part de femmes rédactrices en chef entre 2000 et 2017.",
+    choices:[
+      "La part de femmes rédactrices en chef a reculé sur cette période.",
+      "Elle est passée directement à 50% : la parité est atteinte depuis 2017.",
+      "Elle est passée de 27,7% à 38% — une vraie progression, mais toujours minoritaire."
+    ], correct:2,
+    fb:"Comme sur les plateaux télé, la tendance est à la progression — sans que la parité soit atteinte à ce poste de décision." },
+  { cite:"La même étude a mesuré la part de femmes parmi les directeurs et directrices de publication ou de rédaction — les postes les plus élevés d'un média.",
+    choices:[
+      "Ce chiffre est plus élevé que celui des rédactrices en chef, car ce sont des postes plus visibles.",
+      "Ce chiffre est plus bas — 25,9% en 2017 : plus le poste est élevé dans la hiérarchie d'un média, moins il y a de femmes.",
+      "Il n'existe aucune femme à ce niveau de responsabilité en France."
+    ], correct:1,
+    fb:"Un phénomène classique : plus on monte dans la hiérarchie d'un média, plus la part de femmes diminue — même quand la profession se féminise globalement." }
+];
+
+const DECKS = {
+  discours: { items: CITATIONS_DISCOURS, eyebrow:"On entend souvent", accent:"--coral", back:"cdScreen", end:"cdEndScreen" },
+  sources:  { items: CITATIONS_SOURCES,  eyebrow:"Source officielle", accent:"--blue",  back:"sourcesScreen", end:"cdEndScreen" }
+};
+let citeIndex = 0, currentDeckKey = 'discours';
+function startCitations(deckKey){
+  currentDeckKey = deckKey;
   citeIndex = 0;
   showScreen('citeScreen');
   renderCite();
 }
+function goBackFromCite(){
+  showScreen(DECKS[currentDeckKey].back);
+}
 function renderCite(){
-  document.getElementById('citeIndexLabel').textContent = (citeIndex+1)+'/'+CITATIONS.length;
-  const item = CITATIONS[citeIndex];
+  const deck = DECKS[currentDeckKey];
+  const items = deck.items;
+  document.getElementById('citeIndexLabel').textContent = (citeIndex+1)+'/'+items.length;
+  const item = items[citeIndex];
   const wrap = document.getElementById('citeWrap');
   wrap.innerHTML = `
     <div class="cite-card">
-      <div class="cite-eyebrow">On entend souvent</div>
-      <div class="cite-mark">"</div>
+      <div class="cite-eyebrow" style="color:var(${deck.accent});">${escapeHtml(deck.eyebrow)}</div>
+      <div class="cite-mark" style="color:var(${deck.accent});">"</div>
       <div class="cite-text">${escapeHtml(item.cite)}</div>
       <div class="cite-q">Qu'en est-il vraiment ? Choisis la bonne réponse.</div>
       <div class="cite-choices" id="citeChoices"></div>
       <div class="cite-fb" id="citeFb">${escapeHtml(item.fb)}</div>
       <button class="btn primary cite-next" id="citeNextBtn" style="display:none;" onclick="nextCite()">
-        ${citeIndex === CITATIONS.length-1 ? 'Terminer' : 'Suivant'}
+        ${citeIndex === items.length-1 ? 'Terminer' : 'Suivant'}
       </button>
     </div>
   `;
@@ -451,7 +545,7 @@ function renderCite(){
   });
 }
 function pickCite(i){
-  const item = CITATIONS[citeIndex];
+  const item = DECKS[currentDeckKey].items[citeIndex];
   const buttons = document.querySelectorAll('#citeChoices .cite-choice');
   buttons.forEach((b,idx)=>{
     b.onclick = null;
@@ -463,8 +557,9 @@ function pickCite(i){
   document.getElementById('citeNextBtn').style.display = 'block';
 }
 function nextCite(){
+  const deck = DECKS[currentDeckKey];
   citeIndex++;
-  if(citeIndex >= CITATIONS.length){ showScreen('cdEndScreen'); return; }
+  if(citeIndex >= deck.items.length){ showScreen(deck.end); return; }
   renderCite();
 }
 
