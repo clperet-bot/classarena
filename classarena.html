@@ -433,10 +433,24 @@
     <div class="stack" id="playerList"></div>
   </section>
 
+  <!-- SUBJECT SELECT -->
+  <section class="screen" id="subjectScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backToPlayerScreen()">←</button>
+      <div class="stat-pill" id="subjectClassPill">Classe</div>
+      <div style="width:38px"></div>
+    </div>
+    <p class="page-title">Français ou anglais ?</p>
+    <div class="stack" id="subjectList">
+      <button class="class-btn" onclick="selectSubject('fr')">🇫🇷 Français</button>
+      <button class="class-btn" onclick="selectSubject('en')">🇬🇧 Anglais</button>
+    </div>
+  </section>
+
   <!-- THEME SELECT -->
   <section class="screen" id="themeScreen">
     <div class="topbar">
-      <button class="icon-btn" onclick="backToPlayerScreen()">←</button>
+      <button class="icon-btn" onclick="backToSubjectScreen()">←</button>
       <div class="stat-pill" id="themeClassPill">Classe</div>
       <div style="width:38px"></div>
     </div>
@@ -677,6 +691,13 @@
       <div class="field">
         <label>Nom du thème</label>
         <input type="text" id="themeTitleInput" placeholder="ex: Signalétique du métier">
+      </div>
+      <div class="field">
+        <label>Matière</label>
+        <div class="segment">
+          <button id="segSubjectFr" onclick="setThemeSubject('fr')">🇫🇷 Français</button>
+          <button id="segSubjectEn" onclick="setThemeSubject('en')">🇬🇧 Anglais</button>
+        </div>
       </div>
       <div class="field">
         <label>Classes concernées</label>
@@ -921,6 +942,7 @@ const DEFAULT_CONFIG = {
   themes: [
     {
       id: "irregular-verbs",
+      subject: "en",
       title: "Verbes irréguliers",
       classes: ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"],
       prefix: "to ",
@@ -935,6 +957,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "solve-the-mystery",
+      subject: "en",
       title: "Solve the Mystery — vocabulaire",
       classes: ["1ère MES","1ère MELEC"],
       prefix: "",
@@ -948,6 +971,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "from-art-to-ad",
+      subject: "en",
       title: "From Art to Ad — vocabulaire",
       classes: ["2nde MES"],
       prefix: "",
@@ -961,6 +985,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "vocab-riche",
+      subject: "fr",
       title: "Mieux s'exprimer — vocabulaire riche",
       classes: ALL_CLASSES,
       prefix: "",
@@ -973,6 +998,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "conjugaison",
+      subject: "fr",
       title: "Conjugaison — temps verbaux",
       classes: ALL_CLASSES,
       prefix: "",
@@ -985,6 +1011,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "orthographe",
+      subject: "fr",
       title: "Orthographe — homophones",
       classes: ALL_CLASSES,
       prefix: "",
@@ -997,6 +1024,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "modals",
+      subject: "en",
       title: "Modal verbs — les modaux",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1010,6 +1038,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "conditionals",
+      subject: "en",
       title: "If-clauses — phrases conditionnelles",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1023,6 +1052,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "pronouns",
+      subject: "en",
       title: "Pronoms personnels anglais",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1036,6 +1066,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "temps-narration",
+      subject: "fr",
       title: "Les temps dans la narration",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1048,6 +1079,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "syntaxe",
+      subject: "fr",
       title: "Syntaxe — corrige la phrase",
       classes: ALL_CLASSES,
       prefix: "",
@@ -1060,6 +1092,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "possessive-s",
+      subject: "en",
       title: "La possession avec 's (Cluedo)",
       classes: ["1ère MES","1ère MELEC"],
       prefix: "",
@@ -1131,6 +1164,7 @@ function mergeWithDefaults(saved){
     if(def.distractorStyle && !t.distractorStyle) t.distractorStyle = def.distractorStyle;
     if(def.lessonReminder && !t.lessonReminder) t.lessonReminder = def.lessonReminder;
     if(def.lessonReminderEn && !t.lessonReminderEn) t.lessonReminderEn = def.lessonReminderEn;
+    if(def.subject && !t.subject) t.subject = def.subject;
     if(!def.modes.every(m=>t.modes.includes(m))){
       def.modes.forEach(m=>{ if(!t.modes.includes(m)) t.modes.push(m); });
     }
@@ -1208,6 +1242,7 @@ function closeLessonHelp(){ document.getElementById('lessonHelpOverlay').style.d
 function goClassScreen(){ renderClassList(); showScreen('classScreen'); }
 function backToPlayerScreen(){ renderPlayerList(); showScreen('playerScreen'); }
 function backToThemeScreen(){ renderThemeList(); showScreen('themeScreen'); }
+function backToSubjectScreen(){ showScreen('subjectScreen'); }
 function backFromGame(){
   clearTimeout(shootTimerHandle); clearTimeout(duelRoundTimerHandle); clearInterval(duelPollHandle); stopDuelHeartbeat(); clearInterval(pairsTimerHandle);
   stopShootMotion();
@@ -1217,7 +1252,7 @@ function backFromGame(){
 }
 
 /* ---------------- STUDENT FLOW STATE ---------------- */
-let selectedClass = null, selectedTheme = null, currentMode = null, currentPlayer = null;
+let selectedClass = null, selectedTheme = null, currentMode = null, currentPlayer = null, selectedSubject = null;
 let ITEMS = [], PREFIX = '', PROMPT = '';
 let playerHp = 100, monsterHp = 100;
 
@@ -1261,14 +1296,19 @@ function renderPlayerList(){
 }
 function selectPlayer(name){
   currentPlayer = name;
-  document.getElementById('themeClassPill').textContent = selectedClass + ' · ' + name;
+  document.getElementById('subjectClassPill').textContent = selectedClass + ' · ' + name;
+  showScreen('subjectScreen');
+}
+function selectSubject(subj){
+  selectedSubject = subj;
+  document.getElementById('themeClassPill').textContent = selectedClass + ' · ' + currentPlayer;
   renderThemeList();
   showScreen('themeScreen');
 }
 function renderThemeList(){
   const wrap = document.getElementById('themeList');
   wrap.innerHTML = '';
-  const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass));
+  const list = CONFIG.themes.filter(t=> t.classes.includes(selectedClass) && (!t.subject || t.subject === selectedSubject));
   if(list.length === 0){
     wrap.innerHTML = '<p style="color:var(--dim);font-size:14px;">Aucun thème pour cette classe pour l\'instant.</p>';
     return;
@@ -2326,12 +2366,12 @@ function importRosterExcel(event){
 }
 
 /* ---- theme edit working state ---- */
-let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editModes = [], editLockedMode = 'swipe';
+let editingThemeIndex = null, editClasses = [], editModeMode = 'choice', editModes = [], editLockedMode = 'swipe', editSubject = 'en';
 
 function openThemeEdit(i){
   editingThemeIndex = (typeof i === 'number') ? i : null;
   const t = editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex] : {
-    title:'', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide','progressif'], lockedMode:'swipe', items:[]
+    title:'', subject:'en', classes:[], prefix:'', prompt:'', modeMode:'choice', modes:['swipe','shoot','duel','pairs','guide','progressif'], lockedMode:'swipe', items:[]
   };
   document.getElementById('themeEditTitle').textContent = editingThemeIndex !== null ? 'Modifier le thème' : 'Nouveau thème';
   document.getElementById('themeTitleInput').value = t.title;
@@ -2339,12 +2379,19 @@ function openThemeEdit(i){
   document.getElementById('themePromptInput').value = t.prompt || '';
   document.getElementById('themeItemsTextarea').value = t.items.map(x=>x.join(' ; ')).join('\n');
   renderThemeClassChips(t.classes || []);
+  renderThemeSubjectSegment(t.subject || 'en');
   renderModeModeSegment(t.modeMode || 'choice');
   renderModeCheckboxes(t.modes || ['swipe','shoot','duel','pairs','guide','progressif']);
   renderLockedModeSelect(t.lockedMode || 'swipe');
   document.getElementById('deleteThemeBtn').style.display = editingThemeIndex !== null ? 'block' : 'none';
   showScreen('themeEditScreen');
 }
+function renderThemeSubjectSegment(subj){
+  editSubject = subj;
+  document.getElementById('segSubjectFr').classList.toggle('active', subj==='fr');
+  document.getElementById('segSubjectEn').classList.toggle('active', subj==='en');
+}
+function setThemeSubject(subj){ renderThemeSubjectSegment(subj); }
 function renderThemeClassChips(selected){
   editClasses = selected.slice();
   const wrap = document.getElementById('themeClassChips');
@@ -2408,7 +2455,7 @@ function saveTheme(){
   if(editModeMode === 'choice' && editModes.length === 0){ alert('Sélectionne au moins un mode de jeu.'); return; }
   const theme = {
     id: editingThemeIndex !== null ? CONFIG.themes[editingThemeIndex].id : 'theme-'+Date.now(),
-    title, classes: editClasses.slice(),
+    title, subject: editSubject, classes: editClasses.slice(),
     prefix: document.getElementById('themePrefixInput').value,
     prompt: document.getElementById('themePromptInput').value.trim() || 'Trouve la bonne réponse.',
     modeMode: editModeMode,
