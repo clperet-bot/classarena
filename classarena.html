@@ -785,26 +785,26 @@ const DEFAULT_VOCAB_RICHE = [
 ];
 
 const DEFAULT_CONJUGAISON = [
-["être - il - présent","est","être est totalement irrégulier : je suis, tu es, il est, nous sommes, vous êtes, ils sont."],
-["avoir - je - futur","aurai","Futur d'avoir : j'aurai, tu auras, il aura, nous aurons, vous aurez, ils auront."],
-["aller - nous - imparfait","allions","Imparfait : on part du radical 'all-' + terminaisons -ais,-ais,-ait,-ions,-iez,-aient."],
-["faire - vous - passé composé","avez fait","Passé composé = avoir/être au présent + participe passé. Faire → fait."],
-["dire - tu - présent","dis","Présent de dire : je dis, tu dis, il dit, nous disons, vous dites, ils disent."],
-["venir - ils - futur","viendront","Futur irrégulier : je viendrai, tu viendras... ils viendront."],
-["pouvoir - je - présent","peux","Pouvoir au présent : je peux, tu peux, il peut, nous pouvons, vous pouvez, ils peuvent."],
-["vouloir - elle - présent","veut","Vouloir au présent : je veux, tu veux, il/elle veut, nous voulons, vous voulez, ils veulent."],
-["prendre - nous - passé composé","avons pris","Participe passé de prendre : pris (irrégulier)."],
-["voir - vous - imparfait","voyiez","Imparfait de voir : radical 'voy-' + -iez."],
-["savoir - je - futur","saurai","Futur irrégulier de savoir : je saurai (pas 'saverai')."],
-["devoir - tu - présent","dois","Devoir au présent : je dois, tu dois, il doit, nous devons, vous devez, ils doivent."],
-["mettre - ils - passé composé","ont mis","Participe passé de mettre : mis (invariable ici, un seul 't')."],
-["croire - elle - présent","croit","Présent de croire : je crois, tu crois, il/elle croit, nous croyons, vous croyez, ils croient."],
-["écrire - nous - présent","écrivons","Présent d'écrire : j'écris, tu écris, il écrit, nous écrivons, vous écrivez, ils écrivent."],
-["boire - je - passé composé","ai bu","Participe passé de boire : bu (irrégulier)."],
-["partir - vous - présent","partez","Présent de partir : je pars, tu pars, il part, nous partons, vous partez, ils partent."],
-["finir - ils - futur","finiront","Futur régulier des verbes en -ir : infinitif + -ont."],
-["être - nous - imparfait","étions","Imparfait d'être : radical 'ét-' + -ions."],
-["avoir - elle - passé composé","a eu","Participe passé d'avoir : eu (se prononce 'u')."]
+["être - il - présent","est","être est totalement irrégulier : je suis, tu es, il est, nous sommes, vous êtes, ils sont.",["était","sera","a été"]],
+["avoir - je - futur","aurai","Futur d'avoir : j'aurai, tu auras, il aura, nous aurons, vous aurez, ils auront.",["avais","ai","aurais"]],
+["aller - nous - imparfait","allions","Imparfait : on part du radical 'all-' + terminaisons -ais,-ais,-ait,-ions,-iez,-aient.",["allons","irons","allez"]],
+["faire - vous - passé composé","avez fait","Passé composé = avoir/être au présent + participe passé. Faire → fait.",["faites","avons fait","avez faits"]],
+["dire - tu - présent","dis","Présent de dire : je dis, tu dis, il dit, nous disons, vous dites, ils disent.",["dit","dites","disais"]],
+["venir - ils - futur","viendront","Futur irrégulier : je viendrai, tu viendras... ils viendront.",["viennent","viendrons","venaient"]],
+["pouvoir - je - présent","peux","Pouvoir au présent : je peux, tu peux, il peut, nous pouvons, vous pouvez, ils peuvent.",["peut","pouvais","pourrai"]],
+["vouloir - elle - présent","veut","Vouloir au présent : je veux, tu veux, il/elle veut, nous voulons, vous voulez, ils veulent.",["veux","veulent","voulait"]],
+["prendre - nous - passé composé","avons pris","Participe passé de prendre : pris (irrégulier).",["avons prit","prenons","avez pris"]],
+["voir - vous - imparfait","voyiez","Imparfait de voir : radical 'voy-' + -iez.",["voyez","voirez","voyions"]],
+["savoir - je - futur","saurai","Futur irrégulier de savoir : je saurai (pas 'saverai').",["saverai","sais","saurais"]],
+["devoir - tu - présent","dois","Devoir au présent : je dois, tu dois, il doit, nous devons, vous devez, ils doivent.",["doit","devons","devais"]],
+["mettre - ils - passé composé","ont mis","Participe passé de mettre : mis (invariable ici, un seul 't').",["ont mit","mettent","a mis"]],
+["croire - elle - présent","croit","Présent de croire : je crois, tu crois, il/elle croit, nous croyons, vous croyez, ils croient.",["crois","croient","croyait"]],
+["écrire - nous - présent","écrivons","Présent d'écrire : j'écris, tu écris, il écrit, nous écrivons, vous écrivez, ils écrivent.",["écrivez","écrisons","écrivions"]],
+["boire - je - passé composé","ai bu","Participe passé de boire : bu (irrégulier).",["ai bue","bois","as bu"]],
+["partir - vous - présent","partez","Présent de partir : je pars, tu pars, il part, nous partons, vous partez, ils partent.",["partons","partiez","partirez"]],
+["finir - ils - futur","finiront","Futur régulier des verbes en -ir : infinitif + -ont.",["finissent","finirons","finissaient"]],
+["être - nous - imparfait","étions","Imparfait d'être : radical 'ét-' + -ions.",["sommes","étiez","serons"]],
+["avoir - elle - passé composé","a eu","Participe passé d'avoir : eu (se prononce 'u').",["a eue","avait","aura"]]
 ];
 
 const DEFAULT_ORTHOGRAPHE = [
@@ -813,9 +813,9 @@ const DEFAULT_ORTHOGRAPHE = [
 ["___ chat dort. (Son/Sont)","Son",""],["Les enfants ___ dans le jardin. (son/sont)","sont",""],
 ["___ que tu fais ? (Ce/Se)","Ce",""],["Il ___ lave les mains. (ce/se)","se",""],
 ["___ est facile ! (C'est/S'est)","C'est",""],["Elle ___ blessée hier. (c'est/s'est)","s'est",""],
-["Je n'ai pas ___ de temps. (mais/mes)","mais",""],["Voici ___ affaires. (mais/mes)","mes",""],
+["Je voulais venir, ___ je n'ai pas le temps. (mais/mes)","mais",""],["Voici ___ affaires. (mais/mes)","mes",""],
 ["Il a ___ d'amis. (peu/peux/peut)","peu",""],["Tu ___ venir si tu veux. (peu/peux/peut)","peux",""],
-["___ heure est-il ? (Quel/Quelle/Qu'elle)","Quelle",""],["Je crois ___ vienne. (quel/quelle/qu'elle)","qu'elle",""]
+["___ heure est-il ? (Quel/Quelle/Qu'elle)","Quelle",""],["Je pense ___ est malade. (quel/quelle/qu'elle)","qu'elle",""]
 ];
 
 const ALL_CLASSES = ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"];
@@ -998,6 +998,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "conjugaison",
+      itemsVersion: 2,
       subject: "fr",
       title: "Conjugaison — temps verbaux",
       classes: ALL_CLASSES,
@@ -1011,6 +1012,7 @@ const DEFAULT_CONFIG = {
     },
     {
       id: "orthographe",
+      itemsVersion: 2,
       subject: "fr",
       title: "Orthographe — homophones",
       classes: ALL_CLASSES,
@@ -1168,6 +1170,7 @@ function mergeWithDefaults(saved){
     if(!def.modes.every(m=>t.modes.includes(m))){
       def.modes.forEach(m=>{ if(!t.modes.includes(m)) t.modes.push(m); });
     }
+    if((def.itemsVersion||0) > (t.itemsVersion||0)){ t.items = JSON.parse(JSON.stringify(def.items)); t.itemsVersion = def.itemsVersion; }
     const sameContent = t.items.length === def.items.length &&
       t.items.every((it,i)=> it[0]===def.items[i][0] && it[1]===def.items[i][1]);
     if(sameContent) t.items = JSON.parse(JSON.stringify(def.items));
@@ -1368,6 +1371,22 @@ function regularizeVerb(base){
   return base + 'ed';
 }
 function getDistractors(correctBase, correctAnswer, count){
+  const itemWithDecoys = ITEMS.find(x=>x[0]===correctBase && Array.isArray(x[3]));
+  if(itemWithDecoys){
+    const own = shuffle(itemWithDecoys[3].filter(o=>o!==correctAnswer));
+    if(own.length >= count) return own.slice(0, count);
+    const extra = shuffle(ITEMS.filter(x=>x[1]!==correctAnswer).map(x=>x[1])).filter(d=>!own.includes(d));
+    return own.concat(extra).slice(0, count);
+  }
+  // Phrase à trous avec choix entre parenthèses « (a/à) » : les mauvaises réponses viennent de ces choix
+  const grp = String(correctBase).match(/\(([^()]*\/[^()]*)\)\s*[.!?]*\s*$/);
+  if(grp){
+    const opts = Array.from(new Set(grp[1].split('/').map(x=>x.trim()).filter(Boolean)));
+    const own = shuffle(opts.filter(o=>o !== correctAnswer));
+    if(own.length >= count) return own.slice(0, count);
+    const extra = shuffle(Array.from(new Set(ITEMS.map(x=>x[1])))).filter(d=>d!==correctAnswer && !own.includes(d));
+    return own.concat(extra).slice(0, count);
+  }
   if(selectedTheme && selectedTheme.distractorStyle === 'verb-ed'){
     let result = [];
     const ownDecoy = regularizeVerb(correctBase);
