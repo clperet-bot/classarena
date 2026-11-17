@@ -101,6 +101,15 @@
   .duel-c:hover, .duel-c:focus-visible{border-color:var(--amber);}
   .pairs-c:hover, .pairs-c:focus-visible{border-color:var(--violet);}
   .guide-c:hover, .guide-c:focus-visible{border-color:var(--blue);}
+  .blocs-c .mode-icon{background:rgba(255,92,114,.15); color:var(--coral);}
+  .blocs-c:hover, .blocs-c:focus-visible{border-color:var(--coral);}
+  .blocs-answer{min-height:74px; width:100%; display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; padding:12px; border:2px dashed var(--bg3); border-radius:14px; margin:6px 0 16px;}
+  .blocs-pool{display:flex; flex-wrap:wrap; gap:8px; width:100%; margin-bottom:16px;}
+  .bloc{background:var(--bg2); border:2px solid var(--bg3); border-radius:12px; color:var(--text); font-family:inherit; font-size:16px; font-weight:600; padding:10px 14px; cursor:pointer;}
+  .bloc.used{visibility:hidden;}
+  .bloc.in-answer{border-color:var(--blue);}
+  .bloc.ok{background:var(--lime); color:#0f2400; border-color:var(--lime);}
+  .bloc.ko{background:var(--coral); color:#2a0810; border-color:var(--coral);}
   .mode-title{font-weight:700; font-size:17px; margin:0 0 3px;}
   .mode-desc{color:var(--dim); font-size:13px; margin:0; line-height:1.4;}
 
@@ -604,6 +613,28 @@
     <button class="btn primary" style="width:100%;" id="guideActionBtn" onclick="checkGuideAnswer()">Valider</button>
   </section>
 
+  <!-- BLOCS -->
+  <section class="screen" id="blocsScreen">
+    <div class="topbar">
+      <button class="icon-btn" onclick="backFromGame()">←</button>
+      <div class="stat-pill">Phrase <b id="blocsRoundLabel">1/12</b></div>
+      <div class="stat-pill">Score <b id="blocsScoreLabel">0</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="blocsProgress" style="width:0%"></div></div>
+    <p class="target-sub" id="blocsPromptText">Remets les blocs dans l'ordre</p>
+    <div class="target-word" id="blocsWord" style="font-size:22px; margin-bottom:10px;">phrase</div>
+    <div class="blocs-answer" id="blocsAnswer"></div>
+    <div class="blocs-pool" id="blocsPool"></div>
+    <div class="guide-feedback" id="blocsFeedback">
+      <div id="blocsFeedbackTitle"></div>
+      <div class="guide-answer" id="blocsFeedbackAnswer"></div>
+    </div>
+    <div style="display:flex; gap:10px; width:100%;">
+      <button class="btn ghost" style="flex:1;" onclick="resetBlocs()">Effacer</button>
+      <button class="btn primary" style="flex:2;" id="blocsCheckBtn" onclick="checkBlocs()">Valider</button>
+    </div>
+  </section>
+
   <!-- PAIRS -->
   <section class="screen" id="pairsScreen">
     <div class="topbar">
@@ -936,6 +967,55 @@ const DEFAULT_MODALS = [
 ["You ___ arrive on time, it's important. (must/might)","must",""]
 ];
 
+const DEFAULT_BLOCS_DANGER = [
+["Tu dois porter un casque.","You must wear a helmet.","",["You must","wear","a helmet."]],
+["Il est interdit de fumer ici.","You mustn't smoke here.","",["You mustn't","smoke","here."]],
+["Ne cours pas dans l'atelier.","Don't run in the workshop.","",["Don't","run","in the workshop."]],
+["Il y a un câble par terre.","There is a cable on the floor.","",["There is","a cable","on the floor."]],
+["Il y a des produits dangereux dans la pièce.","There are dangerous products in the room.","",["There are","dangerous products","in the room."]],
+["Les gants protègent tes mains.","Gloves protect your hands.","",["Gloves","protect","your hands."]],
+["Tu dois porter des lunettes de protection parce que c'est dangereux.","You must wear safety glasses because it is dangerous.","",["You must wear","safety glasses","because","it is dangerous."]],
+["Attention ! Le sol est mouillé.","Be careful! The floor is wet.","",["Be careful!","The floor","is wet."]],
+["Où est la sortie de secours ?","Where is the emergency exit?","",["Where is","the emergency exit?"]],
+["Appelle le professeur s'il y a un accident.","Call the teacher if there is an accident.","",["Call","the teacher","if there is","an accident."]],
+["Tu dois couper le courant avant de réparer.","You must switch off the power before you repair it.","",["You must","switch off","the power","before","you repair it."]],
+["Je ne dois pas toucher les fils électriques.","I mustn't touch the electric wires.","",["I mustn't","touch","the electric wires."]],
+["Mets tes chaussures de sécurité.","Put on your safety shoes.","",["Put on","your safety shoes."]],
+["Ne travaille pas avec les mains mouillées.","Don't work with wet hands.","",["Don't","work","with wet hands."]]
+];
+const DEFAULT_BLOCS_SCREEN = [
+["Je pense que le film est génial.","I think the film is great.","",["I think","the film","is great."]],
+["À mon avis, l'histoire est trop longue.","In my opinion, the story is too long.","",["In my opinion,","the story","is too long."]],
+["J'ai adoré les effets spéciaux.","I loved the special effects.","",["I loved","the special effects."]],
+["Je n'ai pas aimé la fin.","I didn't like the ending.","",["I didn't like","the ending."]],
+["Mon personnage préféré est Spider-Man parce qu'il est courageux.","My favourite character is Spider-Man because he is brave.","",["My favourite character","is Spider-Man","because","he is brave."]],
+["Le film parle d'un adolescent qui sauve la ville.","The film is about a teenager who saves the city.","",["The film","is about","a teenager","who saves","the city."]],
+["Les acteurs sont très bons.","The actors are very good.","",["The actors","are","very good."]],
+["Je recommande ce film parce qu'il est drôle.","I recommend this film because it is funny.","",["I recommend","this film","because","it is funny."]],
+["La bande-annonce donne envie de voir le film.","The trailer makes you want to see the film.","",["The trailer","makes you","want to see","the film."]],
+["Je suis d'accord avec toi.","I agree with you.","",["I agree","with you."]],
+["Je ne suis pas d'accord, le film est ennuyeux.","I don't agree, the film is boring.","",["I don't agree,","the film","is boring."]],
+["La musique était trop forte.","The music was too loud.","",["The music","was","too loud."]],
+["Le meilleur moment, c'est la scène de combat.","The best part is the fight scene.","",["The best part","is","the fight scene."]],
+["Tu devrais aller le voir au cinéma.","You should go and see it at the cinema.","",["You should","go and see it","at the cinema."]]
+];
+const DEFAULT_BLOCS_CLUEDO = [
+["Je pense que le coupable est Jason.","I think the culprit is Jason.","",["I think","the culprit","is Jason."]],
+["Il avait un mobile pour tuer la victime.","He had a motive to kill the victim.","",["He had","a motive","to kill","the victim."]],
+["Elle n'a pas d'alibi pour hier soir.","She doesn't have an alibi for last night.","",["She doesn't have","an alibi","for last night."]],
+["Le casier de Jason est vide.","Jason's locker is empty.","",["Jason's locker","is empty."]],
+["Le suspect était dans la bibliothèque à huit heures.","The suspect was in the library at eight o'clock.","",["The suspect","was","in the library","at eight o'clock."]],
+["Qui a trouvé le corps ?","Who found the body?","",["Who found","the body?"]],
+["Les élèves ont vu un homme près de l'école.","The students saw a man near the school.","",["The students","saw","a man","near","the school."]],
+["Il ment parce qu'il a peur.","He is lying because he is afraid.","",["He is lying","because","he is afraid."]],
+["On a trouvé une clé dans la poche du suspect.","They found a key in the suspect's pocket.","",["They found","a key","in the suspect's pocket."]],
+["C'est une fausse piste.","It is a red herring.","",["It is","a red herring."]],
+["Selon le témoin, le coupable portait un manteau noir.","According to the witness, the culprit was wearing a black coat.","",["According to","the witness,","the culprit","was wearing","a black coat."]],
+["Je ne pense pas que ce soit lui parce qu'il a un alibi.","I don't think it is him because he has an alibi.","",["I don't think","it is him","because","he has","an alibi."]],
+["Le détective a posé des questions aux suspects.","The detective asked the suspects some questions.","",["The detective","asked","the suspects","some questions."]],
+["Le coupable a utilisé le couteau dans la cuisine.","The culprit used the knife in the kitchen.","",["The culprit","used","the knife","in the kitchen."]]
+];
+
 const DEFAULT_CONFIG = {
   classes: ["2nde MES","2nde TNE","2nde BMA","1ère MES","1ère MELEC"],
   rosters: {},
@@ -1105,6 +1185,48 @@ const DEFAULT_CONFIG = {
       modes: ["swipe","shoot","duel","pairs","guide","progressif"],
       lockedMode: "swipe",
       items: DEFAULT_POSSESSIVE_S
+    },
+    {
+      id: "blocs-danger-zone",
+      subject: "en",
+      title: "Danger Zone — construis tes phrases",
+      classes: ["2nde TNE"],
+      prefix: "",
+      prompt: "Remets les blocs dans l'ordre pour traduire la phrase.",
+      lessonReminder: "Obligation : You must + verbe (You must wear a helmet). Interdiction : You mustn't + verbe. Conseil/ordre : Don't + verbe, ou le verbe seul (Put on your shoes). « Il y a » : There is + singulier / There are + pluriel. Cause : because + phrase complète (because it is dangerous).",
+      lessonReminderEn: "Obligation: You must + verb. Prohibition: You mustn't + verb. Order: Don't + verb, or the verb alone (Put on your shoes). There is + singular / There are + plural. Reason: because + a full sentence.",
+      modeMode: "choice",
+      modes: ["blocs","guide"],
+      lockedMode: "blocs",
+      items: DEFAULT_BLOCS_DANGER
+    },
+    {
+      id: "blocs-behind-screen",
+      subject: "en",
+      title: "Behind the Screen — donne ton avis",
+      classes: ["2nde MES", "2nde TNE", "2nde BMA"],
+      prefix: "",
+      prompt: "Remets les blocs dans l'ordre pour traduire la phrase.",
+      lessonReminder: "Donner son avis : I think + phrase / In my opinion, + phrase. Aimer : I loved / I liked / I didn't like + nom. Justifier : because + sujet + verbe. Être d'accord : I agree with you / I don't agree. Conseiller : I recommend + nom / You should + verbe. Décrire un film : The film is about + nom.",
+      lessonReminderEn: "Giving your opinion: I think + sentence / In my opinion, + sentence. Likes: I loved / I liked / I didn't like + noun. Reasons: because + subject + verb. Agreeing: I agree with you / I don't agree. Advising: I recommend + noun / You should + verb. Describing a film: The film is about + noun.",
+      modeMode: "choice",
+      modes: ["blocs","guide"],
+      lockedMode: "blocs",
+      items: DEFAULT_BLOCS_SCREEN
+    },
+    {
+      id: "blocs-cluedo",
+      subject: "en",
+      title: "Cluedo — construis tes phrases",
+      classes: ["1ère MES", "1ère MELEC"],
+      prefix: "",
+      prompt: "Remets les blocs dans l'ordre pour traduire la phrase.",
+      lessonReminder: "Accuser : I think + the culprit is... Justifier : because + sujet + verbe. Passé simple (past simple) : was/were, saw, found, used, asked. Négation : She doesn't have an alibi / I don't think it is him. Possession : Jason's locker, the suspect's pocket. Selon quelqu'un : According to the witness, ...",
+      lessonReminderEn: "Accusing: I think + the culprit is... Reasons: because + subject + verb. Past simple: was/were, saw, found, used, asked. Negative: She doesn't have an alibi / I don't think it is him. Possession: Jason's locker, the suspect's pocket. According to the witness, ...",
+      modeMode: "choice",
+      modes: ["blocs","guide"],
+      lockedMode: "blocs",
+      items: DEFAULT_BLOCS_CLUEDO
     }
   ]
 };
@@ -1115,6 +1237,7 @@ const MODE_DEFS = {
   duel:{icon:"⚔", cls:"duel-c", title:"Duel", desc:"Chaque bonne réponse inflige des dégâts, chaque erreur laisse l'adversaire riposter."},
   pairs:{icon:"▦", cls:"pairs-c", title:"Relie les Paires", desc:"Touche un terme puis sa bonne réponse pour les associer, en un minimum de coups."},
   guide:{icon:"📘", cls:"guide-c", title:"Cours guidé", desc:"Tape ta réponse toi-même, avec la correction et une explication à chaque fois. Sans pression de score."},
+  blocs:{icon:"🧩", cls:"blocs-c", title:"Construis la phrase", desc:"Remets les blocs dans l'ordre pour former la phrase correcte, comme un puzzle."},
   progressif:{icon:"📈", cls:"progressif-c", title:"Progressif", desc:"Ça commence facile (choix multiples), puis ça se complique jusqu'à taper la réponse toi-même."}
 };
 
@@ -1221,7 +1344,7 @@ async function initConfig(){
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent = s==null ? '' : s; return d.innerHTML; }
 
 /* ---------------- NAVIGATION ---------------- */
-const GAME_SCREENS = ['swipeScreen','shootScreen','duelScreen','pairsScreen','guideScreen','progressifScreen'];
+const GAME_SCREENS = ['blocsScreen','swipeScreen','shootScreen','duelScreen','pairsScreen','guideScreen','progressifScreen'];
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -1357,6 +1480,7 @@ function launchGame(mode){
   else if(mode === 'pairs') startPairs();
   else if(mode === 'guide') startGuide();
   else if(mode === 'progressif') startProgressif();
+  else if(mode === 'blocs') startBlocs();
 }
 
 /* ---------------- SHARED HELPERS ---------------- */
@@ -1925,8 +2049,8 @@ function handleDuelFinish(row){
   stopDuelHeartbeat();
   const myHp = duelRole === 'host' ? row.host_hp : row.guest_hp;
   const oppHp = duelRole === 'host' ? row.guest_hp : row.host_hp;
-  const won = oppHp <= 0 && myHp > 0;
-  const title = won ? 'VICTOIRE !' : (myHp<=0 ? 'DÉFAITE...' : 'MATCH NUL');
+  const won = myHp > oppHp;
+  const title = won ? 'VICTOIRE !' : (myHp < oppHp ? 'DÉFAITE...' : 'MATCH NUL');
   submitScore('duel', myHp + (won ? 50 : 0));
   showResults(title, myHp, duelLocalRound, [], 'PV restants (adversaire : '+oppHp+')');
 }
@@ -1942,6 +2066,81 @@ function handleDuelAbandon(){
   }
   submitScore('duel', playerHp + 50);
   showResults('ADVERSAIRE PARTI', playerHp, duelLocalRound, [], 'Victoire par abandon — PV restants : '+playerHp);
+}
+
+
+/* =========================================================
+   CONSTRUIS LA PHRASE (blocs)
+   ========================================================= */
+let blocsRounds = [], blocsIndex = 0, blocsScore = 0, blocsMissed = [], blocsPool = [], blocsPicked = [], blocsDone = false;
+const BLOCS_MAX = 12;
+
+function getBlocsChunks(v){
+  return Array.isArray(v[3]) && v[3].length ? v[3] : String(v[1]).split(/\s+/);
+}
+function startBlocs(){
+  blocsRounds = shuffle(ITEMS.slice()).slice(0, BLOCS_MAX);
+  blocsIndex = 0; blocsScore = 0; blocsMissed = [];
+  document.getElementById('blocsScoreLabel').textContent = 0;
+  document.getElementById('blocsPromptText').textContent = PROMPT;
+  showScreen('blocsScreen');
+  renderBlocsRound();
+}
+function renderBlocsRound(){
+  if(blocsIndex >= blocsRounds.length){ finishBlocs(); return; }
+  blocsDone = false;
+  const v = blocsRounds[blocsIndex];
+  document.getElementById('blocsRoundLabel').textContent = (blocsIndex+1)+'/'+blocsRounds.length;
+  document.getElementById('blocsProgress').style.width = (blocsIndex/blocsRounds.length*100)+'%';
+  document.getElementById('blocsFeedback').style.display = 'none';
+  document.getElementById('blocsWord').textContent = v[0];
+  const chunks = getBlocsChunks(v);
+  let order = shuffle(chunks.map((t,i)=>({t, id:i})));
+  for(let k=0; k<5 && chunks.length>1 && order.every((o,i)=>o.id===i); k++) order = shuffle(order);
+  blocsPool = order; blocsPicked = [];
+  document.getElementById('blocsCheckBtn').disabled = false;
+  drawBlocs();
+}
+function drawBlocs(cls){
+  const ans = document.getElementById('blocsAnswer'), pool = document.getElementById('blocsPool');
+  ans.innerHTML = ''; pool.innerHTML = '';
+  blocsPicked.forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'bloc in-answer' + (cls ? ' '+cls : '');
+    b.textContent = o.t;
+    b.onclick = ()=>{ if(blocsDone) return; blocsPicked = blocsPicked.filter(x=>x!==o); drawBlocs(); };
+    ans.appendChild(b);
+  });
+  blocsPool.forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'bloc' + (blocsPicked.includes(o) ? ' used' : '');
+    b.textContent = o.t;
+    b.onclick = ()=>{ if(blocsDone || blocsPicked.includes(o)) return; blocsPicked.push(o); drawBlocs(); };
+    pool.appendChild(b);
+  });
+}
+function resetBlocs(){ if(blocsDone) return; blocsPicked = []; drawBlocs(); }
+function checkBlocs(){
+  if(blocsDone) return;
+  const v = blocsRounds[blocsIndex];
+  if(blocsPicked.length < blocsPool.length){ return; }
+  blocsDone = true;
+  document.getElementById('blocsCheckBtn').disabled = true;
+  const built = blocsPicked.map(o=>o.t).join(' ');
+  const correct = normalizeAnswer(built) === normalizeAnswer(v[1]);
+  drawBlocs(correct ? 'ok' : 'ko');
+  if(correct) blocsScore++; else blocsMissed.push({base:v[0], answer:v[1]});
+  document.getElementById('blocsScoreLabel').textContent = blocsScore;
+  const fb = document.getElementById('blocsFeedback');
+  fb.style.display = 'block';
+  fb.className = 'guide-feedback ' + (correct ? 'ok' : 'bad');
+  document.getElementById('blocsFeedbackTitle').textContent = correct ? '✓ Bravo !' : '✗ Pas tout à fait.';
+  document.getElementById('blocsFeedbackAnswer').textContent = correct ? '' : 'Phrase correcte : ' + v[1];
+  setTimeout(()=>{ blocsIndex++; renderBlocsRound(); }, correct ? 700 : 2200);
+}
+function finishBlocs(){
+  submitScore('blocs', blocsScore);
+  showResults('PHRASES TERMINÉES', blocsScore, blocsRounds.length, blocsMissed);
 }
 
 /* =========================================================
