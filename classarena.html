@@ -1227,6 +1227,17 @@ const DEFAULT_CONFIG = {
       modes: ["blocs","guide"],
       lockedMode: "blocs",
       items: DEFAULT_BLOCS_CLUEDO
+    },
+    {
+      id: "mauvais-genre",
+      subject: "fr",
+      title: "Mauvais genre — réflexes sexistes",
+      classes: ["2nde TNE"],
+      externalUrl: "reflexes-sexistes.html",
+      modeMode: "locked",
+      lockedMode: "swipe",
+      modes: ["swipe"],
+      items: []
     }
   ]
 };
@@ -1290,6 +1301,7 @@ function mergeWithDefaults(saved){
     if(def.lessonReminder && !t.lessonReminder) t.lessonReminder = def.lessonReminder;
     if(def.lessonReminderEn && !t.lessonReminderEn) t.lessonReminderEn = def.lessonReminderEn;
     if(def.subject && !t.subject) t.subject = def.subject;
+    if(def.externalUrl && !t.externalUrl) t.externalUrl = def.externalUrl;
     if(!def.modes.every(m=>t.modes.includes(m))){
       def.modes.forEach(m=>{ if(!t.modes.includes(m)) t.modes.push(m); });
     }
@@ -1442,12 +1454,13 @@ function renderThemeList(){
   list.forEach(t=>{
     const card = document.createElement('div');
     card.className = 'theme-card';
-    card.innerHTML = `<h3>${escapeHtml(t.title)}</h3><p>${t.items.length} éléments</p>`;
+    card.innerHTML = `<h3>${escapeHtml(t.title)}</h3><p>${t.externalUrl ? 'Parcours' : t.items.length + ' éléments'}</p>`;
     card.onclick = ()=> selectTheme(t);
     wrap.appendChild(card);
   });
 }
 function selectTheme(t){
+  if(t.externalUrl){ window.location.href = t.externalUrl; return; }
   selectedTheme = t;
   if(t.modeMode === 'locked'){
     launchGame(t.lockedMode || (t.modes && t.modes[0]) || 'swipe');
@@ -2514,7 +2527,7 @@ function renderTeacherScreen(){
     row.innerHTML = `
       <div>
         <div class="row-title">${escapeHtml(t.title)}</div>
-        <div class="row-sub">${escapeHtml(t.classes.join(', ') || 'Aucune classe')} · ${t.items.length} éléments</div>
+        <div class="row-sub">${escapeHtml(t.classes.join(', ') || 'Aucune classe')} · ${t.externalUrl ? 'parcours' : t.items.length + ' éléments'}</div>
       </div>
       <button class="small-btn" onclick="openThemeEdit(${i})">Modifier</button>`;
     tWrap.appendChild(row);
